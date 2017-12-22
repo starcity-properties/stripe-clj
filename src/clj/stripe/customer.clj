@@ -43,7 +43,7 @@
 ;; customer req =========================
 
 (s/def :customer-req/source
-  :stripe.token/card)
+  token/source?)
 
 (s/def ::default_source
   string?)
@@ -109,6 +109,9 @@
 (s/def ::name
   string?)
 
+
+(defn customer-id? [x]
+  (s/valid? ::customer-id x))
 
 (defn- source [spec]
   (-> (s/keys :req-un [::id ::last4 ::country ::fingerprint
