@@ -2,7 +2,7 @@
   "Functions for Stripe's Balance API."
   (:require [clojure.spec.alpha :as s]
             [stripe.http :as h]
-            [stripe.schema :as ss]))
+            [stripe.spec :as ss]))
 
 ;; =============================================================================
 ;; Spec
@@ -12,7 +12,7 @@
   pos-int?)
 
 (s/def ::currency
-  :stripe.schema/currency-id)
+  ss/currency?)
 
 (s/def ::source_types
   (s/map-of keyword? integer?))
@@ -84,7 +84,7 @@
   (-> (s/keys :req-un [::id ::amount ::available_on ::created ::currency ::fee
                        ::fee_details ::net ::status :balance/type ::description
                        ::source ::object])
-      (s/and (ss/stripe-object "balance_transaction"))))
+      (ss/stripe-object "balance_transaction")))
 
 (s/def ::starting-after
   string?)
@@ -111,7 +111,7 @@
    (h/get-req "balance" opts)))
 
 (s/fdef get-balance
-        :args (s/cat :opts (s/? :stripe.http/request-options))
+        :args (s/cat :opts (s/? h/request-options?))
         :ret (ss/async ::balance))
 
 
@@ -162,7 +162,7 @@
 
 (s/fdef get-balance-tx
         :args (s/cat :transaction-id ::balance-tx-id
-                     :opts (s/? :stripe.http/request-options))
+                     :opts (s/? h/request-options?))
         :ret (ss/async ::balance-tx))
 
 
@@ -179,7 +179,8 @@
     (:amount (first (filter (comp #{currency} :currency) available)))))
 
 (s/fdef available-amount
-        :args (s/cat :balance ::balance :currency (s/? ::currency))
+        :args (s/cat :balance ::balance
+                     :currency (s/? ::currency))
         :ret pos-int?)
 
 
@@ -190,7 +191,8 @@
     (:amount (first (filter (comp #{currency} :currency) pending)))))
 
 (s/fdef pending-amount
-        :args (s/cat :balance ::balance :currency (s/? ::currency))
+        :args (s/cat :balance ::balance
+                     :currency (s/? ::currency))
         :ret pos-int?)
 
 

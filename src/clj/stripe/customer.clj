@@ -2,16 +2,17 @@
   "Stripe's Customer API."
   (:require [clojure.spec.alpha :as s]
             [stripe.http :as h]
-            [stripe.schema :as ss]
+            [stripe.spec :as ss]
             [stripe.token :as token]
             [stripe.util :as u]))
 
 ;; ==============================================================================
-;; spec -------------------------------------------------------------------------
+;; spec =========================================================================
 ;; ==============================================================================
 
 
-;; common ===============================
+;; common =======================================================================
+
 
 (s/def ::id
   string?)
@@ -32,7 +33,7 @@
   string?)
 
 (s/def ::currency
-  :stripe.schema/currency-id)
+  ss/currency?)
 
 (s/def ::country
   string?)
@@ -40,19 +41,23 @@
 (s/def ::account_number
   string?)
 
-;; customer req =========================
+
+;; customer request =============================================================
+
 
 (s/def :customer-req/source
-  token/source?)
+  any?)
 
 (s/def ::default_source
   string?)
 
 (s/def ::customer-req
-  (s/keys :opt-un [:customer-req/source ::description ::email
-                   :stripe.schema/metadata ::default_source]))
+  (-> (s/keys :opt-un [:customer-req/source ::description ::email ::default_source])
+      ss/metadata))
+
 
 ;; sources ======================================================================
+
 
 (s/def ::fingerprint
   (ss/maybe string?))
@@ -60,7 +65,9 @@
 (s/def :source/customer
   string?)
 
-;; bank =================================
+
+;; bank =========================================================================
+
 
 (s/def ::status
   #{"new" "validated" "verified" "verification_failed" "errored"})
@@ -74,7 +81,9 @@
 (s/def ::account_holder_name
   string?)
 
-;; card =================================
+
+;; card =========================================================================
+
 
 (s/def ::funding
   #{"credit" "debit"})
@@ -135,13 +144,17 @@
 (s/def ::source
   (s/multi-spec source-type :object))
 
-;; bank-source-req ======================
+
+;; bank source request ==========================================================
+
 
 (s/def ::bank-source-req
   (ss/metadata
    (s/keys :opt-un [::account_holder_name ::account_holder_type])))
 
-;; verify bank ==========================
+
+;; verify bank ==================================================================
+
 
 (s/def ::deposit-amount
   (s/and integer? (u/between 1 100)))
@@ -149,14 +162,18 @@
 (s/def ::amounts
   (s/cat :amount-1 ::deposit-amount :amount-2 ::deposit-amount))
 
-;; card-source-req ======================
+
+;; card source request ==========================================================
+
 
 (s/def ::card-source-req
   (ss/metadata
    (s/keys :opt-un [::address_city ::address_country ::address_line1 ::address_line2
                     ::address_state ::address_zip ::exp_month ::exp_year ::name])))
 
-;; customer =============================
+
+;; customer =====================================================================
+
 
 (s/def ::created
   ss/unix-timestamp?)
@@ -165,135 +182,163 @@
   (ss/sublist (s/* ::source)))
 
 (s/def ::customer
-  (-> (s/keys :req-un [::id :stripe.schema/livemode ::created]
+  (-> (s/keys :req-un [::id :stripe.spec/livemode ::created]
               :opt-un [::default_source ::description ::email ::sources])
       (ss/stripe-object "customer")))
 
 
 ;; ==============================================================================
-;; HTTP API  --------------------------------------------------------------------
+;; HTTP API  ====================================================================
 ;; ==============================================================================
 
 
-;; create =============================
+;; create! ======================================================================
+
 
 (defn create!
   "Creates a new customer using the Stripe API."
-  [options]
-  (h/post-req "customers" {:stripe-params options}))
+  [opts]
+  (h/post-req "customers" opts))
 
 (s/fdef create!
-        :args (s/cat :opts ::customer-req)
+        :args (s/cat :opts (h/request-options? ::customer-req))
         :ret (ss/async ::customer))
 
 
 (defn add-source!
   "Add a source to a customer given the customer and source ids."
-  [customer-id source-id]
-  (h/post-req (format "customers/%s/sources" customer-id)
-              {:stripe-params {:source source-id}}))
+  ([customer-id source-id]
+   (add-source! customer-id source-id {}))
+  ([customer-id source-id opts]
+   (h/post-req (format "customers/%s/sources" customer-id)
+               (assoc opts :params {:source source-id}))))
 
 (s/fdef add-source!
-        :args (s/cat :customer-id ::customer-id :source-id ::source-id)
+        :args (s/cat :customer-id ::customer-id
+                     :source-id ::source-id
+                     :opts (s/? h/request-options?))
         :ret (ss/async ::source))
 
-;; fetch ================================
+
+;; fetch ========================================================================
+
 
 (defn fetch
   "Retrieves the details of an existing customer. You need only supply
   the unique customer identifier that was returned upon customer
   creation."
-  [customer-id]
-  (h/get-req (str "customers/" customer-id)))
+  ([customer-id]
+   (fetch customer-id {}))
+  ([customer-id opts]
+   (h/get-req (str "customers/" customer-id) opts)))
 
 (s/fdef fetch
-        :args (s/cat :id ::id)
+        :args (s/cat :id ::id
+                     :opts (s/? h/request-options?))
         :ret (ss/async ::customer))
 
 
 (defn fetch-source
   "Get a source that's attached to a customer."
-  [customer-id source-id]
-  (h/get-req (format "customers/%s/sources/%s" customer-id source-id)))
+  ([customer-id source-id]
+   (fetch-source customer-id source-id {}))
+  ([customer-id source-id opts]
+   (h/get-req (format "customers/%s/sources/%s" customer-id source-id) opts)))
 
 (s/fdef fetch-source
-        :args (s/cat :customer-id ::customer-id :source-id ::source-id)
+        :args (s/cat :customer-id ::customer-id
+                     :source-id ::source-id
+                     :opts (s/? h/request-options?))
         :ret (ss/async ::source))
 
-;; update ===============================
+
+;; update! ======================================================================
+
 
 (defn update!
   "Updates the specified customer by setting the values of the parameters
   passed."
-  [customer-id options]
-  (h/post-req (str "customers/" customer-id)
-              {:stripe-params options}))
+  [customer-id opts]
+  (h/post-req (str "customers/" customer-id) opts))
 
 (s/fdef update!
-        :args (s/cat :customer-id ::customer-id :opts ::customer-req)
+        :args (s/cat :customer-id ::customer-id
+                     :opts (h/request-options? ::customer-req))
         :ret (ss/async ::customer))
 
 
 (defn- update-source!
-  [customer-id source-id options]
+  [customer-id source-id opts]
   (h/post-req (format "customers/%s/sources/%s" customer-id source-id)
-              {:stripe-params options}))
+              opts))
 
 
 (defn update-bank-source!
-  "Update a bank account source according to `options`."
-  [customer-id source-id options]
-  (update-source! customer-id source-id options))
+  "Update a bank account source according to `opts`."
+  [customer-id source-id opts]
+  (update-source! customer-id source-id opts))
 
 (s/fdef update-bank-source!
         :args (s/cat :customer-id ::customer-id
                      :source-id ::source-id
-                     :options ::bank-source-req)
+                     :opts (h/request-options? ::bank-source-req))
         :ret (ss/async ::source))
 
 
 (defn verify-bank-source!
   "Verify a bank account source given the deposit amounts."
-  [customer-id source-id [a b :as amounts]]
-  (h/post-req (format "customers/%s/sources/%s/verify"
-                      customer-id source-id)
-              {:stripe-params {:amounts [a b]}}))
+  ([customer-id source-id amounts]
+   (verify-bank-source! customer-id source-id amounts {}))
+  ([customer-id source-id [a b] opts]
+   (h/post-req (format "customers/%s/sources/%s/verify"
+                       customer-id source-id)
+               (assoc opts :params {:amounts [a b]}))))
 
 (s/fdef verify-bank-source!
         :args (s/cat :customer-id ::customer-id
                      :source-id ::source-id
-                     :amounts ::amounts)
+                     :amounts ::amounts
+                     :opts (s/? h/request-options?))
         :ret (ss/async ::source))
 
 
 (defn update-card-source!
-  "Update a card source according to `options`."
-  [customer-id source-id options]
-  (update-source! customer-id source-id options))
+  "Update a card source according to `opts`."
+  [customer-id source-id opts]
+  (update-source! customer-id source-id opts))
 
 (s/fdef update-card-source!
         :args (s/cat :customer-id ::customer-id
                      :source-id ::source-id
-                     :options ::card-source-req)
+                     :opts (h/request-options? ::card-source-req))
         :ret (ss/async ::source))
 
-;; delete ===============================
+
+;; delete! ======================================================================
+
 
 (defn delete!
   "Deletes the supplied customer."
-  [customer-id]
-  (h/delete-req (str "customers/" customer-id)))
+  ([customer-id]
+   (delete! customer-id {}))
+  ([customer-id opts]
+   (h/delete-req (str "customers/" customer-id) opts)))
 
 (s/fdef delete!
-        :args (s/cat :customer-id ::customer-id)
+        :args (s/cat :customer-id ::customer-id
+                     :opts (s/? h/request-options?))
         :ret (ss/async ss/deleted?))
 
 
 (defn delete-source!
   "Deletes the source from this customer."
-  [customer-id source-id]
-  (h/delete-req (format "customers/%s/sources/%s" customer-id source-id)))
+  ([customer-id source-id]
+   (delete-source! customer-id source-id))
+  ([customer-id source-id opts]
+   (h/delete-req (format "customers/%s/sources/%s" customer-id source-id) opts)))
 
 (s/fdef delete-source!
-        :args (s/cat :customer-id ::customer-id :source-id ::source-id)
+        :args (s/cat :customer-id ::customer-id
+                     :source-id ::source-id
+                     :opts (s/? h/request-options?))
         :ret (ss/async ss/deleted?))

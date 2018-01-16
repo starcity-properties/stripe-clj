@@ -1,201 +1,219 @@
 (ns stripe.charge
-  (:require [schema.core :as s]
-            [stripe.balance :as b]
-            [stripe.customer :refer [CustomerID]]
+  (:require [clojure.spec.alpha :as s]
+            [stripe.customer :as customer]
             [stripe.http :as h]
-            [stripe.schema :as ss]
-            [stripe.token :as t]))
+            [stripe.spec :as ss]
+            [stripe.token :as token]))
 
-;; ## Schema
+;; ==============================================================================
+;; spec =========================================================================
+;; ==============================================================================
 
-(s/defschema ChargeID
-  (s/named s/Str "Charge identifier."))
 
-(s/defschema ChargeAmount
-  "A positive integer in cents representing how much to
-        charge the card. The minimum amount is 50 cents."
-  (s/both s/Int (s/pred #(> % 50))))
+;; common =======================================================================
 
-(s/defschema ChargeReq
-  "Supported options for a Stripe charge request."
-  (-> {:amount ChargeAmount
-       s/Any s/Any
-       (s/optional-key :expand) h/Expansion
-       (s/optional-key :currency) ss/CurrencyID
-       (s/optional-key :source) t/Card
-       (s/optional-key :customer) CustomerID
-       (s/optional-key :description) s/Str
-       (s/optional-key :metadata) ss/Metadata
-       (s/optional-key :capture) boolean}
-      (s/both (s/pred (some-fn :source :customer)))))
 
-(s/defschema RefundReq
-  "Supported options for a Stripe refund request."
-  (-> {:id ChargeID
-       s/Any s/Any
-       (s/optional-key :expand) h/Expansion
-       (s/optional-key :amount) ss/PositiveInt
-       (s/optional-key :refund_application_fee) s/Bool}))
+(s/def ::statement-descriptor
+  (s/and string? #(<= (count %) 22)))
 
-(s/defschema Refund
-  (-> {:amount ss/Currency
-       :currency ss/CurrencyID
-       :created ss/UnixTimestamp
-       :balance_transaction (s/either b/BalanceTxID b/BalanceTx)}
-      (ss/stripe-object "refund")))
+(def statement-descriptor?
+  "Is the argument a valid statement descriptor"
+  (partial s/valid? ::statement-descriptor))
 
-(s/defschema BitcoinReceiver
-  {s/Any s/Any})
+(s/def ::charge-amount
+  (s/and integer? #(>= % 50)))          ; minimum is 50 cents
 
-(s/defschema CardObject
-  (-> {:id s/Str
-       :last4 s/Str
-       :brand s/Str
-       :exp_month t/ExpMonth
-       :exp_year t/ExpYear
-       :fingerprint s/Str
-       :country (s/maybe s/Str)
-       :customer (s/maybe s/Str)
-       :name t/FullName
-       :address_line1 (s/maybe s/Str)
-       :address_line2 (s/maybe s/Str)
-       :address_city (s/maybe s/Str)
-       :address_zip (s/maybe s/Str)
-       :address_state (s/maybe s/Str)
-       :address_country (s/maybe s/Str)
-       :cvc_check (s/maybe (s/enum "pass" "fail" "unchecked" "unavailable"))
-       :address_line1_check (s/maybe s/Str)
-       :address_zip_check (s/maybe s/Str)}
-      (ss/stripe-object "card")))
 
-(s/defschema Source
-  (s/either BitcoinReceiver CardObject))
+(def charge-amount?
+  "Is the argument a valid charge amount?"
+  (partial s/valid? ::charge-amount))
 
-(s/defschema Charge
-  (-> {:id ChargeID
-       :created ss/UnixTimestamp
-       :livemode s/Bool
-       :paid s/Bool
-       :status (s/enum "succeeded" "failed")
-       :amount ChargeAmount
-       :currency ss/CurrencyID
-       :refunded s/Bool
-       :source Source
-       :captured s/Bool
-       :refunds (ss/sublist [Refund])
-       :balance_transaction (s/either b/BalanceTxID b/BalanceTx)
-       :failure_message (s/maybe s/Str)
-       :failure_code (s/maybe s/Str)
-       :amount_refunded ss/NonNegativeInt
-       :customer (s/maybe CustomerID)
-       :invoice (s/maybe s/Str)
-       :description (s/maybe s/Str)
-       :dispute (s/maybe {s/Any s/Any})
-       :metadata ss/Metadata
-       :statement_descriptor (s/maybe s/Str)
-       :receipt_email (s/maybe s/Str)
-       :destination (s/maybe s/Str)
-       :application_fee (s/maybe s/Str)
-       :fraud_details {s/Any s/Any}
-       :shipping (s/maybe {s/Any s/Any})
-       (s/optional-key :transfer) s/Str}
+
+;; charge =======================================================================
+
+
+(s/def ::id
+  string?)
+
+(s/def ::amount
+  ::charge-amount)
+
+(s/def ::amount_refunded
+  (s/or :pos-int pos-int? :zero zero?))
+
+(s/def ::application
+  (ss/maybe string?))
+
+(s/def ::application_fee
+  (ss/maybe ::charge-amount?))
+
+(s/def ::balance_transaction
+  (ss/maybe string?))
+
+(s/def ::captured
+  boolean?)
+
+(s/def ::created
+  ss/unix-timestamp?)
+
+(s/def ::customer
+  (ss/maybe string?))
+
+(s/def ::description
+  (ss/maybe string?))
+
+(s/def ::charge
+  (-> (s/keys :req-un [::id ::amount ::amount_refunded ::application ::application_fee
+                       ::balance_transaction ::captured ::created ::currency ::customer
+                       ::description
+                       ;; ::destination ::dispute ::failure_code ::failure_message
+                       ;; ::fraud_details ::invoice ::livemode ::on_behalf_of ::order ::outcome
+                       ;; ::paid
+                       ])
+      (ss/metadata)
       (ss/stripe-object "charge")))
 
-;; ## Application Fees:
 
-(s/defschema ApplicationFeeID
-  (s/named s/Str "Application fee identifier."))
+(def charge?
+  "Is the argument a charge?"
+  (partial s/valid? ::charge))
 
-(s/defschema ApplicationFeeRefundID
-  (s/named s/Str "Application fee refund identifier."))
 
-(s/defschema ApplicationFeeRefund
-  (-> {:id ApplicationFeeRefundID
-       :amount ss/Currency
-       :balance_transaction (s/either b/BalanceTxID b/BalanceTx)
-       :created ss/UnixTimestamp
-       :currency ss/CurrencyID
-       :fee (s/either ApplicationFeeID (s/named s/Any "ApplicationFee"))
-       :metadata ss/Metadata}
-      (ss/stripe-object "fee_refund")))
+;; request ======================================================================
 
-(s/defschema ApplicationFee
-  (-> {:id ApplicationFeeID
-       :account s/Str
-       :amount ss/Currency
-       :amount_refunded ss/Currency
-       :application s/Str
-       :balance_transaction (s/either b/BalanceTxID b/BalanceTx)
-       :charge (s/named s/Str "Payment ID")
-       :created ss/UnixTimestamp
-       :currency ss/CurrencyID
-       :livemode s/Bool
-       :originating_transaction ChargeID
-       :refunded s/Bool
-       :refunds (ss/sublist [ApplicationFeeRefund])}
-      (ss/stripe-object "application_fee")))
 
-(s/defschema ApplicationFeeRefundReq
-  "Supported options for a Stripe application fee refund request."
-  (-> {:id ChargeID
-       (s/optional-key :amount) ss/PositiveInt
-       (s/optional-key :expand) h/Expansion
-       :metadata ss/Metadata}))
+(s/def ::charge-id
+  string?)
 
-;; ## Charge API Requests
+(s/def ::id
+  ::charge-id)
 
-(s/defn create-charge :- (ss/Async)
-  [{:keys [currency] :as options} :- ChargeReq]
+(s/def ::amount
+  ::charge-amount)
+
+(s/def ::currency
+  ss/currency?)
+
+(s/def ::source
+  token/source?)
+
+(s/def ::customer
+  customer/customer-id?)
+
+(s/def ::description
+  string?)
+
+(s/def ::capture
+  boolean?)
+
+(s/def ::receipt_email
+  string?)
+
+(s/def ::account
+  string?)
+
+(s/def ::destination
+  (s/keys :req-un [::account] :opt-un [::amount]))
+
+(s/def ::application_fee
+  ::charge-amount)
+
+(s/def ::transfer_group
+  string?)
+
+(s/def ::on_behalf_of
+  string?)
+
+(s/def ::statement_descriptor
+  ::statement-descriptor)
+
+(s/def ::charge-req
+  (-> (s/keys :req-un [::amount]
+              :opt-un [::currency ::source ::customer ::description ::capture
+                       ::application_fee ::receipt_email ::destination
+                       ::transfer_group ::on_behalf_of ::statement_descriptor])
+      (ss/metadata)))
+
+
+(def charge-req?
+  "Is the argument a valid charge request?"
+  (partial s/valid? ::charge-req))
+
+
+;; ==============================================================================
+;; http api =====================================================================
+;; ==============================================================================
+
+
+(defn create!
+  [{{currency :currency} :params, :as options}]
   (h/post-req "charges"
-              {:stripe-params
-               (assoc options :currency (or currency "usd"))}))
+              (assoc-in options [:params :currency] (or currency "usd"))))
 
-(s/defn retrieve-charge :- (ss/Async)
+(s/fdef create!
+        :args (s/cat :opts (h/request-options? ::charge-req))
+        :ret (ss/async ::charge))
+
+
+(defn fetch
   "Returns a channel containing the charge if it exists, or an error
   if it doesn't."
-  ([charge-id :- ChargeID]
-     (retrieve-charge charge-id {}))
-  ([charge-id :- ChargeID opts :- h/StripeParams]
-     (h/get-req (str "charges/" charge-id)
-                {:stripe-params opts})))
+  ([charge-id]
+   (fetch charge-id {}))
+  ([charge-id opts]
+   (h/get-req (str "charges/" charge-id) opts)))
 
-(s/defn refund-charge :- (ss/Async Charge)
-  "Returns a channel containing the updated charge object if the
-  transaction succeeded, and an error if it didn't.
+(s/fdef fetch
+        :args (s/cat :charge-id string?
+                     :opts (s/? h/request-options?))
+        :ret (ss/async ::charge))
 
-  Note that you can't try to send a refund greater than the current
-  amount on the charge. You can keep refunding until a charge is
-  empty, however."
-  ([req :- RefundReq]
-     (refund-charge req {}))
-  ([req :- RefundReq opts :- h/RequestOptions]
-     (h/post-req (format "charges/%s/refund" (:id req))
-                 (assoc opts
-                        :stripe-params (dissoc req :id)))))
 
-;; ## ApplicationFee API Requests
+;; ==============================================================================
+;; selectors ====================================================================
+;; ==============================================================================
 
-(s/defn refund-app-fee :- (ss/Async ApplicationFeeRefund)
-  "Returns a channel containing the ApplicationFeeRefund, or an
-  error."
-  ([req :- ApplicationFeeRefundReq]
-   (refund-app-fee req {}))
-  ([req :- ApplicationFeeRefundReq
-    opts :- h/RequestOptions]
-   (h/post-req (format "application_fees/%s/refunds" (:id req))
-               (assoc opts
-                      :stripe-params (dissoc req :id)))))
 
-;; ## Helpers
-
-(s/defn amount-available :- ss/NonNegativeInt
+(defn amount-available
   "Returns the amount that the charge is actually worth, or the amount
   available for further refunds."
-  [charge :- Charge]
-  (- (:amount charge)
-     (:amount_refunded charge 0)))
+  [charge]
+  (- (:amount charge) (:amount_refunded charge 0)))
 
-(s/defn amount-refunded :- ss/NonNegativeInt
+(s/fdef amount-available
+        :args (s/cat :charge ::charge)
+        :ret (s/or :zero zero? :pos-int pos-int?))
+
+
+(defn amount-refunded
   "Returns the total amount that was refunded for the charge."
-  [charge :- Charge]
+  [charge]
   (:amount_refunded charge 0))
+
+(s/fdef amount-refunded
+        :args (s/cat :charge ::charge)
+        :ret (s/or :zero zero? :pos-int pos-int?))
+
+
+;; ==============================================================================
+
+
+(comment
+  (h/use-token! "sk_test_mPUtCMOnGXJwD6RAWMPou8PH")
+
+  ;; (h/use-connect-account! "acct_191838JDow24Tc1a")
+  (h/use-connect-account! nil)
+
+  (create! {:params {:customer    "cus_BzZW6T3NzySJ5E"
+                     :amount      500
+                     :description "Test platform charge"}})
+
+  (h/with-connect-account "acct_191838JDow24Tc1a"
+    (create! {:params {:customer    "cus_BU7S7e46Y0wed9"
+                       :amount      500
+                       :description "Test connect charge"}}))
+
+  (h/with-connect-account "acct_191838JDow24Tc1a"
+    (amount-refunded (fetch "py_1BbyfuJDow24Tc1arEHZ7Ecl")))
+
+  )

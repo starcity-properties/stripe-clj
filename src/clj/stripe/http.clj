@@ -3,7 +3,7 @@
             [clojure.core.async :as a]
             [clojure.spec.alpha :as s]
             [org.httpkit.client :as http]
-            [stripe.schema :as ss]
+            [stripe.spec :as ss]
             [stripe.util :as u]
             [stripe.util.codec :as codec]
             [toolbelt.async :as ta]
@@ -14,33 +14,56 @@
 ;; =============================================================================
 
 
-(s/def ::api-token string?)
+(s/def ::api-token
+  string?)
 
 (s/def ::expansion
   (s/or :keyword keyword? :keyseq (s/+ keyword?)))
 
-(s/def ::http-kit-options map?)
+(s/def ::http-kit-options
+  map?)
 
-(s/def ::stripe-params map?)
+(s/def ::params
+  map?)
 
-(s/def ::method #{http/post http/get http/delete})
+(s/def ::method
+  #{http/post http/get http/delete})
 
-(s/def ::out-ch ta/chan?)
+(s/def ::out-ch
+  ta/chan?)
 
-(s/def ::client-options ::http-kit-options)
+(s/def ::client-options
+  ::http-kit-options)
 
-(s/def ::token ::api-token)
+(s/def ::token
+  ::api-token)
 
-(s/def ::account string?)
+(s/def ::account
+  string?)
 
 (s/def ::request-options
-  (s/keys :opt-un [::account ::out-ch ::stripe-params ::client-options ::token]))
+  (s/keys :opt-un [::account ::out-ch ::params ::client-options ::token]))
 
-(s/def ::endpoint string?)
+(s/def ::endpoint
+  string?)
 
 (s/def ::api-call
-  (s/keys :req-un [::method ::endpoint]
-          :opt-un [::account ::out-ch ::stripe-params ::client-options ::token]))
+  (s/and (s/keys :req-un [::method ::endpoint])
+         ::request-options))
+
+
+(defn request-options?
+  "Is the argument a valid request options map?"
+  ([]
+   (partial s/valid? ::request-options))
+  ([params-spec]
+   (s/and ::request-options
+          (comp (partial s/valid? params-spec) :params))))
+
+
+(def api-call?
+  "Is the argument a valid api call map?"
+  (partial s/valid? ::api-call))
 
 
 ;; =============================================================================
@@ -194,7 +217,7 @@
 (s/fdef prepare-params
         :args (s/cat :token ::api-token
                      :method ::method
-                     :params ::stripe-params
+                     :params ::params
                      :opts ::http-kit-options)
         :ret map?)
 
@@ -207,21 +230,21 @@
   "Call an API method on Stripe. If an output channel is supplied, the
   method will place the result in that channel; if not, returns
   synchronously."
-  [{:keys [stripe-params client-options token account method endpoint out-ch]
-    :or   {stripe-params  {}
+  [{:keys [params client-options token account method endpoint out-ch]
+    :or   {params         {}
            client-options {}
            account        *connect-account*
            token          (api-token)}}]
   (assert token "API Token must not be nil.")
   (let [url     (method-url endpoint)
-        params  (->> (assoc client-options :account account)
-                     (prepare-params token method stripe-params))
+        params'  (->> (assoc client-options :account account)
+                      (prepare-params token method params))
         process (fn [ret]
                   (or (json/parse-string (:body ret) keyword)
                       {:error (:error ret)}))]
     (if-not (some? out-ch)
-      (process @(method url params))
-      (do (method url params
+      (process @(method url params'))
+      (do (method url params'
                   (fn [ret]
                     (a/put! out-ch (process ret))
                     (a/close! out-ch)))
