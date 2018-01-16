@@ -1,5 +1,5 @@
 (ns stripe.util
-  "Helpers for stripe-clj's schema definitions.")
+  "Helpers for stripe-clj's spec definitions.")
 
 (defn between
   "returns a predicate that checks that the supplied number falls
