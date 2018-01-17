@@ -104,4 +104,4 @@
   [data-spec]
   (s/and (s/keys :req-un [:sublist/object ::has_more ::url ::data]
                  :opt-un [::total_count ::count])
-         (comp (partial s/valid? data-spec) :data)))
+         (comp (partial s/valid? (s/* data-spec)) :data)))

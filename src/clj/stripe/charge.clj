@@ -16,12 +16,13 @@
 (s/def ::statement-descriptor
   (s/and string? #(<= (count %) 22)))
 
-(def statement-descriptor?
-  "Is the argument a valid statement descriptor"
-  (partial s/valid? ::statement-descriptor))
-
 (s/def ::charge-amount
   (s/and integer? #(>= % 50)))          ; minimum is 50 cents
+
+
+(def statement-descriptor?
+  "Is the argument a valid statement descriptor."
+  (partial s/valid? ::statement-descriptor))
 
 
 (def charge-amount?
@@ -45,7 +46,7 @@
   (ss/maybe string?))
 
 (s/def ::application_fee
-  (ss/maybe ::charge-amount?))
+  (ss/maybe ::charge-amount))
 
 (s/def ::balance_transaction
   (ss/maybe string?))
@@ -73,6 +74,8 @@
       (ss/metadata)
       (ss/stripe-object "charge")))
 
+(s/def ::charges
+  (ss/sublist ::charge))
 
 (def charge?
   "Is the argument a charge?"
@@ -115,9 +118,6 @@
 (s/def ::destination
   (s/keys :req-un [::account] :opt-un [::amount]))
 
-(s/def ::application_fee
-  ::charge-amount)
-
 (s/def ::transfer_group
   string?)
 
@@ -127,7 +127,7 @@
 (s/def ::statement_descriptor
   ::statement-descriptor)
 
-(s/def ::charge-req
+(S/def ::charge-req
   (-> (s/keys :req-un [::amount]
               :opt-un [::currency ::source ::customer ::description ::capture
                        ::application_fee ::receipt_email ::destination
@@ -140,12 +140,26 @@
   (partial s/valid? ::charge-req))
 
 
+(S/def ::fetch-req
+  (-> (s/keys :req-un [::charge-id]
+              :opt-un [::limit])
+      (ss/metadata)))
+
+
+(def fetch-req?
+  "Is the argument a valid fetch request?"
+  (partial s/valid? ::fetch-req))
+
+
 ;; ==============================================================================
 ;; http api =====================================================================
 ;; ==============================================================================
 
 
+;; TODO: create a charge requires either customer or source. ok as is?
+
 (defn create!
+  "Create a charge."
   [{{currency :currency} :params, :as options}]
   (h/post-req "charges"
               (assoc-in options [:params :currency] (or currency "usd"))))
@@ -156,8 +170,8 @@
 
 
 (defn fetch
-  "Returns a channel containing the charge if it exists, or an error
-  if it doesn't."
+  "Returns a channel containing the charge if it exists, or an error if it
+  doesn't."
   ([charge-id]
    (fetch charge-id {}))
   ([charge-id opts]
@@ -165,8 +179,39 @@
 
 (s/fdef fetch
         :args (s/cat :charge-id string?
-                     :opts (s/? h/request-options?))
-        :ret (ss/async ::charge))
+                     :opts (s/? (h/request-options?)))
+        :ret (ss/async string?))
+
+;; TODO: update!
+(defn update!
+  "Updates a charge with values for any of the following arguments: customer, description, fraud-details, metadata, receipt-email, shipping. If any parameters are invalid, returns an error."
+  ([charge-id]
+   (update charge-id {}))
+  ([charge-id opts]
+   (h/put-req (str "charges/" charge-id) opts))
+  )
+
+(s/fdef update
+        :args (s/cat))
+
+
+;; TODO: capture!
+(defn capture! []
+  )
+
+;; TODO: fetch-all
+(defn fetch-all
+  "Returns a channel containing all charges if they exist up to a certain limit, if specified. If charges do not exist, return will be an empty vector."
+  ([]
+   (fetch-all {}))
+  ([opts])
+  (h/get-req "charges" opts))
+
+
+(s/fdef fetch-all
+        :args (s/cat :opts (s/? integer?))
+        :ret (ss/async ::charges))
+
 
 
 ;; ==============================================================================
@@ -201,12 +246,32 @@
 (comment
   (h/use-token! "sk_test_mPUtCMOnGXJwD6RAWMPou8PH")
 
+  (h/use-token! nil)
+
   ;; (h/use-connect-account! "acct_191838JDow24Tc1a")
   (h/use-connect-account! nil)
 
-  (create! {:params {:customer    "cus_BzZW6T3NzySJ5E"
-                     :amount      500
-                     :description "Test platform charge"}})
+  ;; asynchronous
+  (let [c (clojure.core.async/chan)]
+    (create! {:params {:customer    "cus_BzZW6T3NzySJ5E"
+                       :amount      500
+                       :description "Test platform charge"}
+              :out-ch c})
+    c)
+
+
+  (defn random-function []
+    (create! {:params {:customer    "cus_BzZW6T3NzySJ5E"
+                       :amount      500
+                       :description "Test platform charge"}}))
+
+  ;; synchronous
+  (h/with-token "sk_test_mPUtCMOnGXJwD6RAWMPou8PH"
+    (random-function)
+    )
+
+  (random-function)
+
 
   (h/with-connect-account "acct_191838JDow24Tc1a"
     (create! {:params {:customer    "cus_BU7S7e46Y0wed9"
