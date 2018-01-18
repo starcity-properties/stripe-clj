@@ -57,6 +57,15 @@
 (s/def ::created
   ss/unix-timestamp?)
 
+(s/def ::ending_before
+  string?)
+
+(s/def ::starting_after
+  string?)
+
+(s/def ::limit
+  integer?)
+
 (s/def ::customer
   (ss/maybe string?))
 
@@ -127,7 +136,13 @@
 (s/def ::statement_descriptor
   ::statement-descriptor)
 
-(S/def ::charge-req
+(s/def ::fraud_details
+  map?)
+
+(s/def ::shipping
+  map?)
+
+(s/def ::charge-params
   (-> (s/keys :req-un [::amount]
               :opt-un [::currency ::source ::customer ::description ::capture
                        ::application_fee ::receipt_email ::destination
@@ -135,28 +150,57 @@
       (ss/metadata)))
 
 
-(def charge-req?
-  "Is the argument a valid charge request?"
-  (partial s/valid? ::charge-req))
-
-
-(S/def ::fetch-req
+(s/def ::update-params
   (-> (s/keys :req-un [::charge-id]
-              :opt-un [::limit])
+              :opt-un [::customer ::description ::fraud_details ::receipt_email ::shipping])
       (ss/metadata)))
 
 
-(def fetch-req?
+(s/def ::capture-params
+  (-> (s/keys :req-un [::charge-id]
+              :opt-un [::amount ::application_fee ::destination ::receipt_email ::statement_descriptor])
+      (ss/metadata)))
+
+
+(s/def ::fetch-params
+  (-> (s/keys :req-un [::charge-id])
+      (ss/metadata)))
+
+
+(s/def ::fetch-all-params
+  (-> (s/keys :opt-un [::limit ::created ::customer ::transfer_group ::starting_after ::ending_before])
+      (ss/metadata)))
+
+
+(def charge-params?
+  "Is the argument a valid charge request?"
+  (partial s/valid? ::charge-params))
+
+
+(def update-params?
+  "Is the argument a valid update request?"
+  (partial s/valid? ::update-params))
+
+
+(def capture-params?
+  "Is the argument a valid capture request?"
+  (partial s/valid? ::capture-params))
+
+
+(def fetch-params?
   "Is the argument a valid fetch request?"
-  (partial s/valid? ::fetch-req))
+  (partial s/valid? ::fetch-params))
+
+
+(def fetch-all-params?
+  "Is the argument a valid fetch all request?"
+  (partial s/valid? ::fetch-all-params))
 
 
 ;; ==============================================================================
 ;; http api =====================================================================
 ;; ==============================================================================
 
-
-;; TODO: create a charge requires either customer or source. ok as is?
 
 (defn create!
   "Create a charge."
@@ -165,7 +209,7 @@
               (assoc-in options [:params :currency] (or currency "usd"))))
 
 (s/fdef create!
-        :args (s/cat :opts (h/request-options? ::charge-req))
+        :args (s/cat :opts (h/request-options? ::charge-params))
         :ret (ss/async ::charge))
 
 
@@ -179,39 +223,49 @@
 
 (s/fdef fetch
         :args (s/cat :charge-id string?
-                     :opts (s/? (h/request-options?)))
+                     :opts (s/? (h/request-options? ::fetch-params)))
         :ret (ss/async string?))
 
-;; TODO: update!
+
 (defn update!
-  "Updates a charge with values for any of the following arguments: customer, description, fraud-details, metadata, receipt-email, shipping. If any parameters are invalid, returns an error."
+  "Returns an updated charge with values for any of the following arguments: customer, description, fraud details, metadata, receipt email, shipping. If any parameters are invalid, returns an error."
   ([charge-id]
-   (update charge-id {}))
+   (update! charge-id {}))
   ([charge-id opts]
-   (h/put-req (str "charges/" charge-id) opts))
+   (h/post-req (str "charges/" charge-id) opts))
   )
 
-(s/fdef update
-        :args (s/cat))
+(s/fdef update!
+        :args (s/cat :charge-id string?
+                     :opts (s/? (h/request-options? ::update-params)))
+        :ret (ss/async string?))
 
 
-;; TODO: capture!
-(defn capture! []
+(defn capture!
+  "Returns an updated charge with captured property set to true. If charge is already refunded, expired, captured, or an invalid capture amount is specified, returns an error."
+  ([charge-id]
+   (capture! charge-id {}))
+  ([charge-id opts]
+   (h/post-req (str "charges/" charge-id) opts))
   )
 
-;; TODO: fetch-all
+(s/fdef capture!
+        :args (s/cat :charge-id string?
+                     :opts (s/? (h/request-options? ::capture-params)))
+        :ret (ss/async string?))
+
+
 (defn fetch-all
   "Returns a channel containing all charges if they exist up to a certain limit, if specified. If charges do not exist, return will be an empty vector."
   ([]
    (fetch-all {}))
-  ([opts])
-  (h/get-req "charges" opts))
+  ([opts]
+   (h/get-req "charges" opts)))
 
 
 (s/fdef fetch-all
-        :args (s/cat :opts (s/? integer?))
+        :args (s/cat :opts (s/? (h/request-options? ::fetch-all-params)))
         :ret (ss/async ::charges))
-
 
 
 ;; ==============================================================================
