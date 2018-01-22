@@ -33,24 +33,22 @@
   Map
   (form-encode* [params encoding]
     (letfn [(encode [x] (form-encode* x encoding))
-            ;; MODIFICATIONS HERE
             (encode-array-param [[k v]] (str (encode (name k)) "[]=" (encode v)))
-            ;; (encode-map-params [[k v]] (let [params (->> (flatten-map v) (map (partial cons k)))]
-            ;;                              (map (fn [param]
-            ;;                                     (let [value (last param)
-            ;;                                           name  (parameterize (butlast param))]
-            ;;                                       (if (sequential? value)
-            ;;                                         (str name "[]=" value)
-            ;;                                         (str name "=" value))))
-            ;;                                   params)))
-            ;; ^^^^^^^^^^^^^^^^^^^^^^^^^
+            (encode-map-params [[k v]] (let [params (->> (flatten-map v) (map (partial cons k)))]
+                                         (map (fn [param]
+                                                (let [value (last param)
+                                                      name  (parameterize (butlast param))]
+                                                  (if (sequential? value)
+                                                    (str name "[]=" value)
+                                                    (str name "=" value))))
+                                              params)))
             (encode-param [[k v]] (str (encode (name k)) "=" (encode v)))]
       (->> params
            (mapcat
             (fn [[k v]]
               (cond
                 (or (seq? v) (sequential? v)) (map #(encode-array-param [k %]) v)
-                ;; (map? v)                      (encode-map-params [k v])
+                (map? v)                      (encode-map-params [k v])
                 :otherwise                    [(encode-param [k v])])))
            (str/join "&"))))
   Object
