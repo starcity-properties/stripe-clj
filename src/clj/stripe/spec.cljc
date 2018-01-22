@@ -1,5 +1,6 @@
 (ns stripe.spec
   (:require [clojure.spec.alpha :as s]
+            [stripe.util :as util]
             [toolbelt.async :as ta]))
 
 
@@ -30,7 +31,7 @@
 
 
 (s/def ::currency-id
-  string?)
+  (s/and string? #(= 3 (count %))))
 
 (s/def ::error
   map?)
@@ -52,6 +53,8 @@
          ;; Only 20 KV pairs are currently supported.
          #(< (count %) 20)))
 
+(s/def ::limit
+  (s/and integer? (util/between 1 101)))
 
 (defn metadata [spec]
   (s/and spec (s/keys :opt-un [::metadata])))
@@ -77,6 +80,10 @@
 
 (defn currency? [x]
   (s/valid? ::currency-id x))
+
+
+(defn limit? [x]
+  (s/valid? ::limit x))
 
 
 ;; sublist ==============================
