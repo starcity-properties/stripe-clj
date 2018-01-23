@@ -144,6 +144,11 @@
 (s/def ::fetch-all-params
   (s/keys :opt-un [::ending_before ::limit ::starting_after]))
 
+(s/def ::cards
+  (ss/sublist ::card))
+
+(def cards?
+  (partial s/valid? ::cards))
 
 ;; ==============================================================================
 ;; http api =====================================================================
@@ -207,7 +212,7 @@
         :args (s/cat :customer-id ::id
                      :card-id ::id
                      :opts (s/? (h/request-options?)))
-        :ret (ss/async ::card))
+        :ret (ss/async ss/deleted?))
 
 
 (defn fetch-all
@@ -224,7 +229,7 @@
         :args (s/cat :customer-id ::id
                      :params (s/? ::fetch-all-params)
                      :opts (s/? (h/request-options?)))
-        :ret (ss/async ss/deleted?))
+        :ret (ss/async ::cards))
 
 (comment
 
@@ -244,7 +249,7 @@
   (fetch-all test-customer)
   (fetch-all test-customer {})
 
-  (delete! test-customer "card_1BnE8LIvRccmW9nO9QaA2nfv")
+  (delete! test-customer "card_1BnXjMIvRccmW9nOAAJqgBcT")
 
   (do
     (require '[clojure.spec.test.alpha :as stest])
