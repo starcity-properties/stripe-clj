@@ -6,10 +6,6 @@
 ;; helper =======================================================================
 
 
-#_(defn maybe [spec]
-  (s/or :something spec :nothing nil?))
-
-
 (defn channel
   "Takes a spec and returns a spec for a channel. The inner spec is ignored, and
   used just for documentation purposes."

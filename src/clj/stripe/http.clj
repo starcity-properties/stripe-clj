@@ -52,15 +52,6 @@
          ::request-options))
 
 
-;; (defn request-options?
-;;   "Is the argument a valid request options map?"
-;;   ([]
-;;    (partial s/valid? ::request-options))
-;;   ([params-spec]
-;;    (s/and ::request-options
-;;           (comp (partial s/valid? params-spec) :params))))
-
-
 (defn request-options?
   "Is the argument a valid request options map?"
   [x]
