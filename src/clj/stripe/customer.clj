@@ -399,35 +399,21 @@
 
   (h/use-token! nil)
 
-  ;; (h/use-connect-account! "acct_191838JDow24Tc1a")
-  (h/use-connect-account! nil)
-
   ;; asynchronous
   (let [c (clojure.core.async/chan)]
-    (create! {:params {:description "Test create customer"}
-              :Out-ch c})
+    (create! {:out-ch c} {:customer    "cus_BzZW6T3NzySJ5E"
+                          :description "Test create customer"})
     c)
 
 
   (defn random-function []
-    (create! {:params {:customer    "cus_BzZW6T3NzySJ5E"
-                       :amount      500
-                       :description "Test platform charge"}}))
+    (create! {:customer    "cus_BzZW6T3NzySJ5E"
+              :description "Test create customer"}))
 
   ;; synchronous
   (h/with-token "sk_test_mPUtCMOnGXJwD6RAWMPou8PH"
-    (random-function)
-    )
+    (random-function))
 
   (random-function)
-
-
-  (h/with-connect-account "acct_191838JDow24Tc1a"
-    (create! {:params {:customer    "cus_BU7S7e46Y0wed9"
-                       :amount      500
-                       :description "Test connect charge"}}))
-
-  (h/with-connect-account "acct_191838JDow24Tc1a"
-    (amount-refunded (fetch "py_1BbyfuJDow24Tc1arEHZ7Ecl")))
 
 )

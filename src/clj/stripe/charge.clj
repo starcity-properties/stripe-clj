@@ -207,7 +207,7 @@
   ([params]
    (create! params {}))
   ([params {{currency :currency} :params, :as options}]
-   (h/post-req "charges" (assoc-in options [:params :currency] (or currency "usd")))))
+   (h/post-req "charges" (assoc-in (assoc options :params params) [:params :currency] (or currency "usd")))))
 
 (s/fdef create!
         :args (s/cat :params ::charge-params
@@ -311,30 +311,28 @@
 
   ;; asynchronous
   (let [c (clojure.core.async/chan)]
-    (create! {:params {:customer    "cus_BzZW6T3NzySJ5E"
-                       :amount      500
-                       :description "Test platform charge"}
-              :out-ch c})
+    (create! {:out-ch c} {:customer    "cus_BzZW6T3NzySJ5E"
+                          :amount      500
+                          :description "Test platform charge"})
     c)
 
 
   (defn random-function []
-    (create! {:params {:customer    "cus_BzZW6T3NzySJ5E"
-                       :amount      500
-                       :description "Test platform charge"}}))
+    (create! {:customer    "cus_BzZW6T3NzySJ5E"
+              :amount      500
+              :description "Test platform charge"}))
 
   ;; synchronous
   (h/with-token "sk_test_mPUtCMOnGXJwD6RAWMPou8PH"
-    (random-function)
-    )
+    (random-function))
 
   (random-function)
 
 
   (h/with-connect-account "acct_191838JDow24Tc1a"
-    (create! {:params {:customer    "cus_BU7S7e46Y0wed9"
-                       :amount      500
-                       :description "Test connect charge"}}))
+    (create! {:customer    "cus_BU7S7e46Y0wed9"
+              :amount      500
+              :description "Test connect charge"}))
 
   (h/with-connect-account "acct_191838JDow24Tc1a"
     (amount-refunded (fetch "py_1BbyfuJDow24Tc1arEHZ7Ecl")))
