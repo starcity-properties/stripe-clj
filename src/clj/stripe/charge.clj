@@ -218,9 +218,9 @@
 (defn fetch
   "Returns a channel containing the charge if it exists, or an error if it
   doesn't."
-  ([params charge-id]
+  ([charge-id params]
    (fetch charge-id {}))
-  ([params charge-id opts]
+  ([charge-id params opts]
    (h/get-req (str "charges/" charge-id) (assoc opts :params params))))
 
 (s/fdef fetch
@@ -232,9 +232,9 @@
 
 (defn update!
   "Returns an updated charge with values for any of the following arguments: customer, description, fraud details, metadata, receipt email, shipping. If any parameters are invalid, returns an error."
-  ([params charge-id]
+  ([charge-id params]
    (update! charge-id {}))
-  ([params charge-id opts]
+  ([charge-id params opts]
    (h/post-req (str "charges/" charge-id) (assoc opts :params params))))
 
 (s/fdef update!
@@ -246,9 +246,9 @@
 
 (defn capture!
   "Returns an updated charge with captured property set to true. If charge is already refunded, expired, captured, or an invalid capture amount is specified, returns an error."
-  ([params charge-id]
+  ([charge-id params]
    (capture! charge-id {}))
-  ([params charge-id opts]
+  ([charge-id params opts]
    (h/post-req (str "charges/" charge-id) (assoc opts :params params))))
 
 (s/fdef capture!
