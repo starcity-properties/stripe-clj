@@ -162,11 +162,6 @@
       (ss/metadata)))
 
 
-(s/def ::fetch-params
-  (-> (s/keys :req-un [::charge-id])
-      (ss/metadata)))
-
-
 (s/def ::fetch-all-params
   (-> (s/keys :opt-un [::limit ::created ::customer ::transfer_group ::starting_after ::ending_before])
       (ss/metadata)))
@@ -187,11 +182,6 @@
   (partial s/valid? ::capture-params))
 
 
-(def fetch-params?
-  "Is the argument a valid fetch request?"
-  (partial s/valid? ::fetch-params))
-
-
 (def fetch-all-params?
   "Is the argument a valid fetch all request?"
   (partial s/valid? ::fetch-all-params))
@@ -204,10 +194,11 @@
 
 (defn create!
   "Create a charge."
-  ([params]
-   (create! params {}))
-  ([params {{currency :currency} :params, :as options}]
-   (h/post-req "charges" (assoc-in (assoc options :params params) [:params :currency] (or currency "usd")))))
+  ([]
+   (create! {}))
+  ([{{currency :currency} :params, :as options}]
+   (let [params (assoc params :currency (or currency "usd"))]
+     (h/post-req "charges" (assoc options :params params)))))
 
 (s/fdef create!
         :args (s/cat :params ::charge-params
@@ -218,14 +209,13 @@
 (defn fetch
   "Returns a channel containing the charge if it exists, or an error if it
   doesn't."
-  ([charge-id params]
+  ([charge-id]
    (fetch charge-id {}))
-  ([charge-id params opts]
-   (h/get-req (str "charges/" charge-id) (assoc opts :params params))))
+  ([charge-id opts]
+   (h/get-req (str "charges/" charge-id) opts)))
 
 (s/fdef fetch
         :args (s/cat :charge-id string?
-                     :params ::fetch-params
                      :opts (s/? h/request-options?))
         :ret (ss/async string?))
 
