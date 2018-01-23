@@ -113,7 +113,7 @@
   customer/customer-id?)
 
 (s/def ::description
-  (s/? string?))
+  (s/nilable string?))
 
 (s/def ::capture
   boolean?)
@@ -140,7 +140,7 @@
   map?)
 
 (s/def ::shipping
-  (s/? map?))
+  (s/nilable map?))
 
 (s/def ::charge-params
   (-> (s/keys :req-un [::amount]
