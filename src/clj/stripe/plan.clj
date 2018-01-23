@@ -72,7 +72,7 @@
   (-> (s/keys :opt-un [::ending_before ::limit ::starting_after])))
 
 (s/def ::plans
-  (ss/sublist :plan))
+  (ss/sublist ::plan))
 
 (def plans?
   (partial s/valid? ::plans))
