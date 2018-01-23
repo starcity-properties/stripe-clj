@@ -43,13 +43,13 @@
   (s/or :pos-int pos-int? :zero zero?))
 
 (s/def ::application
-  (ss/maybe string?))
+  (s/nilable string?))
 
 (s/def ::application_fee
-  (ss/maybe ::charge-amount))
+  (s/nilable ::charge-amount))
 
 (s/def ::balance_transaction
-  (ss/maybe string?))
+  (s/nilable string?))
 
 (s/def ::captured
   boolean?)
@@ -67,10 +67,10 @@
   integer?)
 
 (s/def ::customer
-  (ss/maybe string?))
+  (s/nilable string?))
 
 (s/def ::description
-  (ss/maybe string?))
+  (s/nilable string?))
 
 (s/def ::charge
   (-> (s/keys :req-un [::id ::amount ::amount_refunded ::application ::application_fee
@@ -204,67 +204,71 @@
 
 (defn create!
   "Create a charge."
-  [{{currency :currency} :params, :as options}]
-  (h/post-req "charges"
-              (assoc-in options [:params :currency] (or currency "usd"))))
+  ([params]
+   (create! params {}))
+  ([params {{currency :currency} :params, :as options}]
+   (h/post-req "charges" (assoc-in options [:params :currency] (or currency "usd")))))
 
 (s/fdef create!
-        :args (s/cat :opts (h/request-options? ::charge-params))
+        :args (s/cat :params ::charge-params
+                     :opts (s/? h/request-options?))
         :ret (ss/async ::charge))
 
 
 (defn fetch
   "Returns a channel containing the charge if it exists, or an error if it
   doesn't."
-  ([charge-id]
+  ([params charge-id]
    (fetch charge-id {}))
-  ([charge-id opts]
-   (h/get-req (str "charges/" charge-id) opts)))
+  ([params charge-id opts]
+   (h/get-req (str "charges/" charge-id) (assoc opts :params params))))
 
 (s/fdef fetch
         :args (s/cat :charge-id string?
-                     :opts (s/? (h/request-options? ::fetch-params)))
+                     :params ::fetch-params
+                     :opts (s/? h/request-options?))
         :ret (ss/async string?))
 
 
 (defn update!
   "Returns an updated charge with values for any of the following arguments: customer, description, fraud details, metadata, receipt email, shipping. If any parameters are invalid, returns an error."
-  ([charge-id]
+  ([params charge-id]
    (update! charge-id {}))
-  ([charge-id opts]
-   (h/post-req (str "charges/" charge-id) opts))
-  )
+  ([params charge-id opts]
+   (h/post-req (str "charges/" charge-id) (assoc opts :params params))))
 
 (s/fdef update!
         :args (s/cat :charge-id string?
-                     :opts (s/? (h/request-options? ::update-params)))
+                     :params ::update-params
+                     :opts (s/? h/request-options?))
         :ret (ss/async string?))
 
 
 (defn capture!
   "Returns an updated charge with captured property set to true. If charge is already refunded, expired, captured, or an invalid capture amount is specified, returns an error."
-  ([charge-id]
+  ([params charge-id]
    (capture! charge-id {}))
-  ([charge-id opts]
-   (h/post-req (str "charges/" charge-id) opts))
-  )
+  ([params charge-id opts]
+   (h/post-req (str "charges/" charge-id) (assoc opts :params params))))
 
 (s/fdef capture!
         :args (s/cat :charge-id string?
-                     :opts (s/? (h/request-options? ::capture-params)))
+                     :params ::capture-params
+                     :opts (s/? h/request-options?))
         :ret (ss/async string?))
 
 
 (defn fetch-all
   "Returns a channel containing all charges if they exist up to a certain limit, if specified. If charges do not exist, return will be an empty vector."
-  ([]
+  ([params]
    (fetch-all {}))
-  ([opts]
-   (h/get-req "charges" opts)))
+  ([params opts]
+   (h/get-req "charges" (assoc opts :params params))))
 
 
 (s/fdef fetch-all
-        :args (s/cat :opts (s/? (h/request-options? ::fetch-all-params)))
+        :args (s/cat :params ::fetch-all-params
+                     :opts (s/? h/request-options?))
         :ret (ss/async ::charges))
 
 
