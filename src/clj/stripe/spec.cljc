@@ -56,6 +56,16 @@
 (s/def ::limit
   (s/and integer? (util/between 1 101)))
 
+(s/def ::statement-descriptor
+  (s/and string? #(<= (count %) 22)))
+
+
+(defn statement-descriptor?
+  "Is the argument a valid statement descriptor"
+  [x]
+  (s/valid? ::statement-descriptor x))
+
+
 (defn metadata [spec]
   (s/and spec (s/keys :opt-un [::metadata])))
 
