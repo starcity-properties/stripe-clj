@@ -87,9 +87,6 @@
 (s/def ::funding
   #{"credit" "debit" "prepaid" "unknown"})
 
-(s/def ::last4
-  ss/last4?)
-
 (s/def ::name
   (s/nilable string?))
 
@@ -101,7 +98,7 @@
 
 (s/def ::card
   (-> (s/keys :req-un [::id ::brand ::country ::customer ::exp_month
-                       ::exp_year ::fingerprint ::funding ::last4 ]
+                       ::exp_year ::fingerprint ::funding :stripe.spec/last4 ]
               :opt-un [::account ::address_city ::address_country
                        ::address_line1 ::address_line1_check
                        ::address_line2 ::address_state ::address_zip

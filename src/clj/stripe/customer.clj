@@ -29,9 +29,6 @@
 (s/def ::email
   (s/nilable string?))
 
-(s/def ::last4
-  ss/last4?)
-
 (s/def ::currency
   ss/currency?)
 
@@ -136,7 +133,7 @@
   (s/valid? ::customer-id x))
 
 (defn- source [spec]
-  (-> (s/keys :req-un [::id ::last4 ::country ::fingerprint
+  (-> (s/keys :req-un [::id :stripe.spec/last4 ::country ::fingerprint
                        :source/customer])
       (s/and spec)
       (ss/metadata)))
