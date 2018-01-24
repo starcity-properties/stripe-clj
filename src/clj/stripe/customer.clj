@@ -30,7 +30,7 @@
   (s/nilable string?))
 
 (s/def ::last4
-  string?)
+  ss/last4?)
 
 (s/def ::currency
   ss/currency?)
