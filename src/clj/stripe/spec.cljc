@@ -48,13 +48,31 @@
          ;; Only 20 KV pairs are currently supported.
          #(< (count %) 20)))
 
+(s/def ::unix-timestamp
+  integer?)
+
+(s/def ::gt
+  ::unix-timestamp)
+
+(s/def ::gte
+  ::unix-timestamp)
+
+(s/def ::lt
+  ::unix-timestamp)
+
+(s/def ::lte
+  ::unix-timestamp)
+
+(s/def ::timestamp-query
+  (s/keys :opt-un [::gt ::gte ::lt ::lte]))
+
 
 (defn metadata [spec]
   (s/and spec (s/keys :opt-un [::metadata])))
 
 
 (defn unix-timestamp? [ts]
-  (integer? ts))
+  (s/valid? ::unix-timestamp ts))
 
 
 (defn deleted? [x]
@@ -73,6 +91,10 @@
 
 (defn currency? [x]
   (s/valid? ::currency-id x))
+
+
+(defn timestamp-query? [x]
+  (s/valid? ::timestamp-query x))
 
 
 ;; sublist ==============================

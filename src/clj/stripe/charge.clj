@@ -143,11 +143,13 @@
   (s/nilable map?))
 
 (s/def ::charge-params
-  (-> (s/keys :req-un [::amount]
-              :opt-un [::currency ::source ::customer ::description ::capture
-                       ::application_fee ::receipt_email ::destination
-                       ::transfer_group ::on_behalf_of ::statement_descriptor])
-      (ss/metadata)))
+  (letfn [(has-source-or-customer? [x]
+            (or (contains? x :source) (contains? x :customer)))]
+    (-> (s/keys :opt-un [::currency ::source ::customer ::description ::capture
+                         ::application_fee ::receipt_email ::destination
+                         ::transfer_group ::on_behalf_of ::statement_descriptor])
+        (s/and has-source-or-customer?)
+        (ss/metadata))))
 
 
 (s/def ::update-params
@@ -194,14 +196,15 @@
 
 (defn create!
   "Create a charge."
-  ([]
-   (create! {}))
-  ([{{currency :currency} :params, :as options}]
-   (let [params (assoc params :currency (or currency "usd"))]
-     (h/post-req "charges" (assoc options :params params)))))
+  ([amount params]
+   (create! amount params {}))
+  ([amount {:keys [currency] :or {currency "usd"} :as params} opts]
+   (let [params (assoc params :currency currency :amount amount)]
+     (h/post-req "charges" (assoc opts :params params)))))
 
 (s/fdef create!
-        :args (s/cat :params ::charge-params
+        :args (s/cat :amount ::amount
+                     :params ::charge-params
                      :opts (s/? h/request-options?))
         :ret (ss/async ::charge))
 

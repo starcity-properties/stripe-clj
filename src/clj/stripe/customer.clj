@@ -410,10 +410,19 @@
     (create! {:customer    "cus_BzZW6T3NzySJ5E"
               :description "Test create customer"}))
 
+
+  ;; The three ways to use an api token in requests
+
+  (create! {:customer    "cus_BzZW6T3NzySJ5E"
+            :description "Test create customer"})
+
   ;; synchronous
   (h/with-token "sk_test_mPUtCMOnGXJwD6RAWMPou8PH"
-    (random-function))
+    (create! {:customer    "cus_BzZW6T3NzySJ5E"
+              :description "Test create customer"}))
 
-  (random-function)
+  (create! {:customer    "cus_BzZW6T3NzySJ5E"
+            :description "Test create customer"}
+           {:token (config/stripe-private-key config)})
 
 )
