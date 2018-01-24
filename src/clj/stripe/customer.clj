@@ -143,7 +143,7 @@
 
 (defmethod source-type "bank_account" [_]
   (source
-   (s/keys :req-un [::bank_name ::currency ::status ::currency
+   (s/keys :req-un [::bank_name ::currency ::status
                     ::account_holder_type ::account_holder_name]
            :opt-un [::routing_number])))
 
