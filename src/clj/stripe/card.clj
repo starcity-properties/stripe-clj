@@ -87,9 +87,6 @@
 (s/def ::funding
   #{"credit" "debit" "prepaid" "unknown"})
 
-(s/def ::last4
-  (s/and string? #(= 4 (count %))))
-
 (s/def ::name
   (s/nilable string?))
 

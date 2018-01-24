@@ -49,6 +49,9 @@
          ;; Only 20 KV pairs are currently supported.
          #(< (count %) 20)))
 
+(s/def ::last4
+  (s/and string? #(= 4 (count %)))
+
 (s/def ::unix-timestamp
   integer?)
 
@@ -112,6 +115,10 @@
 
 (defn limit? [x]
   (s/valid? ::limit x))
+
+
+(defn last4? [x]
+  (s/valid? ::last4 x))
 
 
 ;; sublist ==============================

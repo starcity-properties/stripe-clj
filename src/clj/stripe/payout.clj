@@ -94,17 +94,18 @@
 
 ;; fetch-all ================================================================
 
-(s/def :fetch-all/arrival_date
+(s/def :stripe.payout.fetch-all/arrival_date
   ss/timestamp-query?)
 
-(s/def :fetch-all/created
+(s/def :stripe.payout.fetch-all/created
   ss/timestamp-query?)
 
 (s/def ::limit
   integer?)
 
 (s/def ::fetch-all-params
-  (s/keys :opt-un [:stripe.payout.fetch-all/arrival_date :stripe.payout.fetch-all/created ::destination
+  (s/keys :opt-un [:stripe.payout.fetch-all/arrival_date
+                   :stripe.payout.fetch-all/created ::destination
                    ::ending_before ::limit ::starting_after ::status]))
 
 
@@ -209,7 +210,7 @@
   (= 3 (count (:data (fetch-all {:limit 3}))))
 
   ;; TODO check test once merged branch
-  (fetch-all {:created {:gt 1515723919}})
+  (fetch-all {:created {:lt 1516327443}})
 
   ;; TODO test cancel!
   )
