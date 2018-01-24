@@ -7,10 +7,6 @@
 ;; helper =======================================================================
 
 
-(defn maybe [spec]
-  (s/or :something spec :nothing nil?))
-
-
 (defn channel
   "Takes a spec and returns a spec for a channel. The inner spec is ignored, and
   used just for documentation purposes."
@@ -53,6 +49,24 @@
          ;; Only 20 KV pairs are currently supported.
          #(< (count %) 20)))
 
+(s/def ::unix-timestamp
+  integer?)
+
+(s/def ::gt
+  ::unix-timestamp)
+
+(s/def ::gte
+  ::unix-timestamp)
+
+(s/def ::lt
+  ::unix-timestamp)
+
+(s/def ::lte
+  ::unix-timestamp)
+
+(s/def ::timestamp-query
+  (s/keys :opt-un [::gt ::gte ::lt ::lte]))
+
 (s/def ::limit
   (s/and integer? (util/between 1 101)))
 
@@ -71,7 +85,7 @@
 
 
 (defn unix-timestamp? [ts]
-  (integer? ts))
+  (s/valid? ::unix-timestamp ts))
 
 
 (defn deleted? [x]
@@ -92,11 +106,16 @@
   (s/valid? ::currency-id x))
 
 
+(defn timestamp-query? [x]
+  (s/valid? ::timestamp-query x))
+
+
 (defn limit? [x]
   (s/valid? ::limit x))
 
 
 ;; sublist ==============================
+
 
 (s/def ::livemode
   boolean?)
@@ -121,4 +140,4 @@
   [data-spec]
   (s/and (s/keys :req-un [:sublist/object ::has_more ::url ::data]
                  :opt-un [::total_count ::count])
-         (comp (partial s/valid? data-spec) :data)))
+         (comp (partial s/valid? (s/* data-spec)) :data)))

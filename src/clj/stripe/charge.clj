@@ -13,6 +13,9 @@
 ;; common =======================================================================
 
 
+(s/def ::statement_descriptor
+  (ss/statement-descriptor?))
+
 (s/def ::charge-amount
   (s/and integer? #(>= % 50)))          ; minimum is 50 cents
 
@@ -35,13 +38,13 @@
   (s/or :pos-int pos-int? :zero zero?))
 
 (s/def ::application
-  (ss/maybe string?))
+  (s/nilable string?))
 
 (s/def ::application_fee
-  (ss/maybe ::charge-amount?))
+  (s/nilable ::charge-amount))
 
 (s/def ::balance_transaction
-  (ss/maybe string?))
+  (s/nilable string?))
 
 (s/def ::captured
   boolean?)
@@ -49,11 +52,20 @@
 (s/def ::created
   ss/unix-timestamp?)
 
+(s/def ::ending_before
+  string?)
+
+(s/def ::starting_after
+  string?)
+
+(s/def ::limit
+  integer?)
+
 (s/def ::customer
-  (ss/maybe string?))
+  (s/nilable string?))
 
 (s/def ::description
-  (ss/maybe string?))
+  (s/nilable string?))
 
 (s/def ::charge
   (-> (s/keys :req-un [::id ::amount ::amount_refunded ::application ::application_fee
@@ -66,6 +78,8 @@
       (ss/metadata)
       (ss/stripe-object "charge")))
 
+(s/def ::charges
+  (ss/sublist ::charge))
 
 (def charge?
   "Is the argument a charge?"
@@ -94,7 +108,7 @@
   customer/customer-id?)
 
 (s/def ::description
-  string?)
+  (s/nilable string?))
 
 (s/def ::capture
   boolean?)
@@ -108,9 +122,6 @@
 (s/def ::destination
   (s/keys :req-un [::account] :opt-un [::amount]))
 
-(s/def ::application_fee
-  ::charge-amount)
-
 (s/def ::transfer_group
   string?)
 
@@ -120,17 +131,57 @@
 (s/def ::statement_descriptor
   ss/statement-descriptor?)
 
-(s/def ::charge-req
-  (-> (s/keys :req-un [::amount]
-              :opt-un [::currency ::source ::customer ::description ::capture
-                       ::application_fee ::receipt_email ::destination
-                       ::transfer_group ::on_behalf_of ::statement_descriptor])
+(s/def ::fraud_details
+  map?)
+
+(s/def ::shipping
+  (s/nilable map?))
+
+(s/def ::charge-params
+  (letfn [(has-source-or-customer? [x]
+            (or (contains? x :source) (contains? x :customer)))]
+    (-> (s/keys :opt-un [::currency ::source ::customer ::description ::capture
+                         ::application_fee ::receipt_email ::destination
+                         ::transfer_group ::on_behalf_of ::statement_descriptor])
+        (s/and has-source-or-customer?)
+        (ss/metadata))))
+
+
+(s/def ::update-params
+  (-> (s/keys :req-un [::charge-id]
+              :opt-un [::customer ::description ::fraud_details ::receipt_email ::shipping])
       (ss/metadata)))
 
 
-(def charge-req?
+(s/def ::capture-params
+  (-> (s/keys :req-un [::charge-id]
+              :opt-un [::amount ::application_fee ::destination ::receipt_email ::statement_descriptor])
+      (ss/metadata)))
+
+
+(s/def ::fetch-all-params
+  (-> (s/keys :opt-un [::limit ::created ::customer ::transfer_group ::starting_after ::ending_before])
+      (ss/metadata)))
+
+
+(def charge-params?
   "Is the argument a valid charge request?"
-  (partial s/valid? ::charge-req))
+  (partial s/valid? ::charge-params))
+
+
+(def update-params?
+  "Is the argument a valid update request?"
+  (partial s/valid? ::update-params))
+
+
+(def capture-params?
+  "Is the argument a valid capture request?"
+  (partial s/valid? ::capture-params))
+
+
+(def fetch-all-params?
+  "Is the argument a valid fetch all request?"
+  (partial s/valid? ::fetch-all-params))
 
 
 ;; ==============================================================================
@@ -139,18 +190,23 @@
 
 
 (defn create!
-  [{{currency :currency} :params, :as options}]
-  (h/post-req "charges"
-              (assoc-in options [:params :currency] (or currency "usd"))))
+  "Create a charge."
+  ([amount params]
+   (create! amount params {}))
+  ([amount {:keys [currency] :or {currency "usd"} :as params} opts]
+   (let [params (assoc params :currency currency :amount amount)]
+     (h/post-req "charges" (assoc opts :params params)))))
 
 (s/fdef create!
-        :args (s/cat :opts (h/request-options? ::charge-req))
+        :args (s/cat :amount ::amount
+                     :params ::charge-params
+                     :opts (s/? h/request-options?))
         :ret (ss/async ::charge))
 
 
 (defn fetch
-  "Returns a channel containing the charge if it exists, or an error
-  if it doesn't."
+  "Returns a channel containing the charge if it exists, or an error if it
+  doesn't."
   ([charge-id]
    (fetch charge-id {}))
   ([charge-id opts]
@@ -159,7 +215,49 @@
 (s/fdef fetch
         :args (s/cat :charge-id string?
                      :opts (s/? h/request-options?))
-        :ret (ss/async ::charge))
+        :ret (ss/async string?))
+
+
+(defn update!
+  "Returns an updated charge with values for any of the following arguments: customer, description, fraud details, metadata, receipt email, shipping. If any parameters are invalid, returns an error."
+  ([charge-id params]
+   (update! charge-id {}))
+  ([charge-id params opts]
+   (h/post-req (str "charges/" charge-id) (assoc opts :params params))))
+
+(s/fdef update!
+        :args (s/cat :charge-id string?
+                     :params ::update-params
+                     :opts (s/? h/request-options?))
+        :ret (ss/async string?))
+
+
+(defn capture!
+  "Returns an updated charge with captured property set to true. If charge is already refunded, expired, captured, or an invalid capture amount is specified, returns an error."
+  ([charge-id params]
+   (capture! charge-id {}))
+  ([charge-id params opts]
+   (h/post-req (str "charges/" charge-id) (assoc opts :params params))))
+
+(s/fdef capture!
+        :args (s/cat :charge-id string?
+                     :params ::capture-params
+                     :opts (s/? h/request-options?))
+        :ret (ss/async string?))
+
+
+(defn fetch-all
+  "Returns a channel containing all charges if they exist up to a certain limit, if specified. If charges do not exist, return will be an empty vector."
+  ([params]
+   (fetch-all {}))
+  ([params opts]
+   (h/get-req "charges" (assoc opts :params params))))
+
+
+(s/fdef fetch-all
+        :args (s/cat :params ::fetch-all-params
+                     :opts (s/? h/request-options?))
+        :ret (ss/async ::charges))
 
 
 ;; ==============================================================================
@@ -194,17 +292,35 @@
 (comment
   (h/use-token! "sk_test_mPUtCMOnGXJwD6RAWMPou8PH")
 
+  (h/use-token! nil)
+
   ;; (h/use-connect-account! "acct_191838JDow24Tc1a")
   (h/use-connect-account! nil)
 
-  (create! {:params {:customer    "cus_BzZW6T3NzySJ5E"
-                     :amount      500
-                     :description "Test platform charge"}})
+  ;; asynchronous
+  (let [c (clojure.core.async/chan)]
+    (create! {:out-ch c} {:customer    "cus_BzZW6T3NzySJ5E"
+                          :amount      500
+                          :description "Test platform charge"})
+    c)
+
+
+  (defn random-function []
+    (create! {:customer    "cus_BzZW6T3NzySJ5E"
+              :amount      500
+              :description "Test platform charge"}))
+
+  ;; synchronous
+  (h/with-token "sk_test_mPUtCMOnGXJwD6RAWMPou8PH"
+    (random-function))
+
+  (random-function)
+
 
   (h/with-connect-account "acct_191838JDow24Tc1a"
-    (create! {:params {:customer    "cus_BU7S7e46Y0wed9"
-                       :amount      500
-                       :description "Test connect charge"}}))
+    (create! {:customer    "cus_BU7S7e46Y0wed9"
+              :amount      500
+              :description "Test connect charge"}))
 
   (h/with-connect-account "acct_191838JDow24Tc1a"
     (amount-refunded (fetch "py_1BbyfuJDow24Tc1arEHZ7Ecl")))

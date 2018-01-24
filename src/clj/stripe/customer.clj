@@ -24,10 +24,10 @@
   ::id)
 
 (s/def ::description
-  (ss/maybe string?))
+  (s/nilable string?))
 
 (s/def ::email
-  (ss/maybe string?))
+  (s/nilable string?))
 
 (s/def ::last4
   string?)
@@ -45,22 +45,35 @@
 ;; customer request =============================================================
 
 
+(s/def ::limit
+  integer?)
+
+(s/def ::starting_after
+  string?)
+
+(s/def ::ending_before
+  string?)
+
 (s/def :customer-req/source
   any?)
 
 (s/def ::default_source
-  string?)
+  (s/nilable string?))
 
 (s/def ::customer-req
   (-> (s/keys :opt-un [:customer-req/source ::description ::email ::default_source])
       ss/metadata))
+
+(s/def ::all-customers-req
+  (-> (s/keys :opt-un [::limit ::created ::email ::starting_after ::ending_before])
+      (ss/metadata)))
 
 
 ;; sources ======================================================================
 
 
 (s/def ::fingerprint
-  (ss/maybe string?))
+  (s/nilable string?))
 
 (s/def :source/customer
   string?)
@@ -186,6 +199,9 @@
               :opt-un [::default_source ::description ::email ::sources])
       (ss/stripe-object "customer")))
 
+(s/def ::customers
+  (ss/sublist ::customer))
+
 
 ;; ==============================================================================
 ;; HTTP API  ====================================================================
@@ -197,11 +213,14 @@
 
 (defn create!
   "Creates a new customer using the Stripe API."
-  [opts]
-  (h/post-req "customers" opts))
+  ([params]
+   (create! params {}))
+  ([params opts]
+   (h/post-req "customers" (assoc opts :params params))))
 
 (s/fdef create!
-        :args (s/cat :opts (h/request-options? ::customer-req))
+        :args (s/cat :params ::customer-req
+                     :opts (s/? h/request-options?))
         :ret (ss/async ::customer))
 
 
@@ -258,12 +277,15 @@
 (defn update!
   "Updates the specified customer by setting the values of the parameters
   passed."
-  [customer-id opts]
-  (h/post-req (str "customers/" customer-id) opts))
+  ([customer-id params]
+   (update! customer-id params {}))
+  ([customer-id params opts]
+   (h/post-req (str "customers/" customer-id) (assoc opts :params params))))
 
 (s/fdef update!
         :args (s/cat :customer-id ::customer-id
-                     :opts (h/request-options? ::customer-req))
+                     :params ::customer-req
+                     :opts (s/? h/request-options?))
         :ret (ss/async ::customer))
 
 
@@ -275,13 +297,16 @@
 
 (defn update-bank-source!
   "Update a bank account source according to `opts`."
-  [customer-id source-id opts]
-  (update-source! customer-id source-id opts))
+  ([customer-id source-id params]
+   (update-bank-source! customer-id source-id params {}))
+  ([customer-id source-id params opts]
+   (update-source! customer-id source-id (assoc opts :params params))))
 
 (s/fdef update-bank-source!
         :args (s/cat :customer-id ::customer-id
                      :source-id ::source-id
-                     :opts (h/request-options? ::bank-source-req))
+                     :params ::bank-source-req
+                     :opts (s/? h/request-options?))
         :ret (ss/async ::source))
 
 
@@ -304,13 +329,16 @@
 
 (defn update-card-source!
   "Update a card source according to `opts`."
-  [customer-id source-id opts]
-  (update-source! customer-id source-id opts))
+  ([customer-id source-id params]
+   (update-card-source! customer-id source-id params {}))
+  ([customer-id source-id params opts]
+   (update-source! customer-id source-id (assoc opts :params params))))
 
 (s/fdef update-card-source!
         :args (s/cat :customer-id ::customer-id
                      :source-id ::source-id
-                     :opts (h/request-options? ::card-source-req))
+                     :params ::card-source-req
+                     :opts (s/? h/request-options?))
         :ret (ss/async ::source))
 
 
@@ -342,3 +370,59 @@
                      :source-id ::source-id
                      :opts (s/? h/request-options?))
         :ret (ss/async ss/deleted?))
+
+
+;; fetch-all ========================================================================
+
+
+(defn fetch-all
+  "Returns a list of customers sorted by creation date, most recent first."
+  ([params]
+   (fetch-all params {}))
+  ([params opts]
+   (h/get-req "customers" (assoc opts :params params))))
+
+(s/fdef fetch-all
+        :args (s/cat :params ::all-customers-req
+                     :opts (s/? h/request-options?))
+        :ret (ss/async ::customers))
+
+
+;; TODO: make `search-by-email` function
+
+
+;; ==================================================================================
+
+
+(comment
+  (h/use-token! "sk_test_mPUtCMOnGXJwD6RAWMPou8PH")
+
+  (h/use-token! nil)
+
+  ;; asynchronous
+  (let [c (clojure.core.async/chan)]
+    (create! {:out-ch c} {:customer    "cus_BzZW6T3NzySJ5E"
+                          :description "Test create customer"})
+    c)
+
+
+  (defn random-function []
+    (create! {:customer    "cus_BzZW6T3NzySJ5E"
+              :description "Test create customer"}))
+
+
+  ;; The three ways to use an api token in requests
+
+  (create! {:customer    "cus_BzZW6T3NzySJ5E"
+            :description "Test create customer"})
+
+  ;; synchronous
+  (h/with-token "sk_test_mPUtCMOnGXJwD6RAWMPou8PH"
+    (create! {:customer    "cus_BzZW6T3NzySJ5E"
+              :description "Test create customer"}))
+
+  (create! {:customer    "cus_BzZW6T3NzySJ5E"
+            :description "Test create customer"}
+           {:token (config/stripe-private-key config)})
+
+)

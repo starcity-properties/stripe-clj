@@ -54,11 +54,8 @@
 
 (defn request-options?
   "Is the argument a valid request options map?"
-  ([]
-   (partial s/valid? ::request-options))
-  ([params-spec]
-   (s/and ::request-options
-          (comp (partial s/valid? params-spec) :params))))
+  [x]
+  (s/valid? ::request-options x))
 
 
 (def api-call?
@@ -83,7 +80,7 @@
 (defn api-token [] *token*)
 
 (s/fdef api-token
-        :ret (ss/maybe ::api-token))
+        :ret (s/nilable ::api-token))
 
 
 (defmacro with-token [t & forms]
@@ -110,7 +107,7 @@
 (defn api-version [] *api-version*)
 
 (s/fdef api-version
-        :ret (ss/maybe string?))
+        :ret (s/nilable string?))
 
 
 (defmacro with-api-version
@@ -138,7 +135,7 @@
 (defn connect-account [] *connect-account*)
 
 (s/fdef connect-account
-        :ret (ss/maybe string?))
+        :ret (s/nilable string?))
 
 
 (defmacro with-connect-account

@@ -40,10 +40,10 @@
   string?)
 
 (s/def ::description
-  (ss/maybe string?))
+  (s/nilable string?))
 
 (s/def ::application
-  (ss/maybe string?))
+  (s/nilable string?))
 
 (s/def ::fee-details
   (s/keys :req-un [::amount ::currency :fee-details/type ::description ::application]))
