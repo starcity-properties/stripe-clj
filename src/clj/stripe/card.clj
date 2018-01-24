@@ -87,6 +87,9 @@
 (s/def ::funding
   #{"credit" "debit" "prepaid" "unknown"})
 
+(s/def ::last4
+  ss/last4?)
+
 (s/def ::name
   (s/nilable string?))
 
