@@ -234,8 +234,8 @@
            token          (api-token)}}]
   (assert token "API Token must not be nil.")
   (let [url     (method-url endpoint)
-        params'  (->> (assoc client-options :account account)
-                      (prepare-params token method params))
+        params' (->> (assoc client-options :account account)
+                     (prepare-params token method params))
         process (fn [ret]
                   (or (json/parse-string (:body ret) keyword)
                       {:error (:error ret)}))]

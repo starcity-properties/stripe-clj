@@ -13,16 +13,11 @@
 ;; common =======================================================================
 
 
-(s/def ::statement-descriptor
-  (s/and string? #(<= (count %) 22)))
+(s/def ::statement_descriptor
+  (ss/statement-descriptor?))
 
 (s/def ::charge-amount
   (s/and integer? #(>= % 50)))          ; minimum is 50 cents
-
-
-(def statement-descriptor?
-  "Is the argument a valid statement descriptor."
-  (partial s/valid? ::statement-descriptor))
 
 
 (def charge-amount?
@@ -134,7 +129,7 @@
   string?)
 
 (s/def ::statement_descriptor
-  ::statement-descriptor)
+  ss/statement-descriptor?)
 
 (s/def ::fraud_details
   map?)

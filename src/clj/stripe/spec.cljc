@@ -1,5 +1,6 @@
 (ns stripe.spec
   (:require [clojure.spec.alpha :as s]
+            [stripe.util :as util]
             [toolbelt.async :as ta]))
 
 
@@ -26,7 +27,7 @@
 
 
 (s/def ::currency-id
-  string?)
+  (s/and string? #(= 3 (count %))))
 
 (s/def ::error
   map?)
@@ -66,6 +67,18 @@
 (s/def ::timestamp-query
   (s/keys :opt-un [::gt ::gte ::lt ::lte]))
 
+(s/def ::limit
+  (s/and integer? (util/between 1 101)))
+
+(s/def ::statement-descriptor
+  (s/and string? #(<= (count %) 22)))
+
+
+(defn statement-descriptor?
+  "Is the argument a valid statement descriptor"
+  [x]
+  (s/valid? ::statement-descriptor x))
+
 
 (defn metadata [spec]
   (s/and spec (s/keys :opt-un [::metadata])))
@@ -97,7 +110,12 @@
   (s/valid? ::timestamp-query x))
 
 
+(defn limit? [x]
+  (s/valid? ::limit x))
+
+
 ;; sublist ==============================
+
 
 (s/def ::livemode
   boolean?)
