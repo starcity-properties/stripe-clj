@@ -86,11 +86,13 @@
 
 
 (s/def ::create-params
-  (s/keys :opt-un [::currency ::description ::destination ::method
-                   ::source_type ::statement_descriptor]))
+  (-> (s/keys :opt-un [::currency ::description ::destination ::method
+                       ::source_type ::statement_descriptor])
+      (ss/metadata)))
 
 
 ;; fetch-all ================================================================
+
 
 (s/def :stripe.payout.fetch-all/arrival_date
   ss/timestamp-query?)
@@ -108,9 +110,10 @@
   string?)
 
 (s/def ::fetch-all-params
-  (s/keys :opt-un [:stripe.payout.fetch-all/arrival_date
-                   :stripe.payout.fetch-all/created ::destination
-                   ::ending_before ::limit ::starting_after ::status]))
+  (-> (s/keys :opt-un [:stripe.payout.fetch-all/arrival_date
+                    :stripe.payout.fetch-all/created ::destination
+                       ::ending_before ::limit ::starting_after ::status])
+      (ss/metadata)))
 
 
 ;; ==========================================================================
