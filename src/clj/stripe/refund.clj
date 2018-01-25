@@ -155,6 +155,14 @@
 
   (h/use-token! "sk_test_mPUtCMOnGXJwD6RAWMPou8PH")
 
+  (h/use-token! nil)
+
   (create! "re_1Bo4SwIvRccmW9nObjukcHHf")
 
-  )
+  (fetch "re_1Bo4SwIvRccmW9nObjukcHHf" {:out-ch (clojure.core.async/chan)})
+
+  (fetch-all {:created {:lt 1516327443}})
+
+  ;; TODO test update!
+
+)
