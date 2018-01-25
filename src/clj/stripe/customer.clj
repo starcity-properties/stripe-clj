@@ -33,7 +33,7 @@
   ss/currency?)
 
 (s/def ::country
-  string?)
+  ss/country?)
 
 (s/def ::account_number
   string?)

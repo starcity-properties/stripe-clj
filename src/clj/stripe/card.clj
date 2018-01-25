@@ -118,7 +118,6 @@
 (s/def ::source
   (s/or :source-id string? :source-map ::source-map))
 
-
 ;; update-params ========================
 
 (s/def ::update-params
@@ -164,7 +163,7 @@
 (s/fdef create!
         :args (s/cat :customer-id ::id
                      :source ::source
-                     :opts (s/? (h/request-options?)))
+                     :opts (s/? h/request-options?))
         :ret (ss/async ::card))
 
 
@@ -178,7 +177,7 @@
 (s/fdef fetch
         :args (s/cat :customer-id ::id
                      :source-id ::id
-                     :opts (s/? (h/request-options?)))
+                     :opts (s/? h/request-options?))
         :ret (ss/async ::card))
 
 
@@ -194,7 +193,7 @@
         :args (s/cat :customer-id ::id
                      :card-id ::id
                      :params ::update-params
-                     :opts (s/? (h/request-options?)))
+                     :opts (s/? h/request-options?))
         :ret (ss/async ::card))
 
 
@@ -208,7 +207,7 @@
 (s/fdef delete!
         :args (s/cat :customer-id ::id
                      :card-id ::id
-                     :opts (s/? (h/request-options?)))
+                     :opts (s/? h/request-options?))
         :ret (ss/async ss/deleted?))
 
 
@@ -225,7 +224,7 @@
 (s/fdef fetch-all
         :args (s/cat :customer-id ::id
                      :params (s/? ::fetch-all-params)
-                     :opts (s/? (h/request-options?)))
+                     :opts (s/? h/request-options?))
         :ret (ss/async ::cards))
 
 (comment

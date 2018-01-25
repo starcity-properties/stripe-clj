@@ -59,10 +59,8 @@
 (s/def ::source_type
   #{"card" "bank_account" "bitcoin_receiver" "alipay_account"})
 
-;; TODO: use reusable `ss/statement-descriptor?` in `stripe.spec` after merging
-;; from upstream.
 (s/def ::statement_descriptor
-  (s/nilable string?))
+  (ss/statement-descriptor?))
 
 (s/def ::status
   #{"paid" "pending" "in_transit" "canceled" "failed"})
@@ -100,8 +98,14 @@
 (s/def :stripe.payout.fetch-all/created
   ss/timestamp-query?)
 
+(s/def ::ending_before
+  string?)
+
 (s/def ::limit
   integer?)
+
+(s/def ::starting_after
+  string?)
 
 (s/def ::fetch-all-params
   (s/keys :opt-un [:stripe.payout.fetch-all/arrival_date

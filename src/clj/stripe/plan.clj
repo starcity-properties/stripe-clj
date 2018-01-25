@@ -100,7 +100,7 @@
                      :interval ::interval
                      :amount ::amount
                      :params (s/? ::create-params)
-                     :opts (s/? (h/request-options?)))
+                     :opts (s/? h/request-options?))
         :ret (ss/async ::plan))
 
 
@@ -113,7 +113,7 @@
 
 (s/fdef fetch
         :args (s/cat :plan-id ::id
-                     :opts (s/? (h/request-options?)))
+                     :opts (s/? h/request-options?))
         :ret (ss/async ::plan))
 
 
@@ -128,7 +128,7 @@
 (s/fdef update!
         :args (s/cat :plan-id ::id
                      :params ::update-params
-                     :opts (s/? (h/request-options?)))
+                     :opts (s/? h/request-options?))
         :ret (ss/async ::plan))
 
 
@@ -141,7 +141,7 @@
 
 (s/fdef delete!
         :args (s/cat :plan-id ::id
-                     :opts (s/? (h/request-options?)))
+                     :opts (s/? h/request-options?))
         :ret (ss/async ss/deleted?))
 
 
@@ -157,7 +157,7 @@
 
 (s/fdef fetch-all
         :args (s/cat :params (s/? ::fetch-all-params)
-                     :opts (s/? (h/request-options?)))
+                     :opts (s/? h/request-options?))
         :ret (ss/async ::plans))
 
 

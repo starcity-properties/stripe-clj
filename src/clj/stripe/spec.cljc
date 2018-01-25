@@ -29,6 +29,9 @@
 (s/def ::currency-id
   (s/and string? #(= 3 (count %))))
 
+(s/def ::country-id
+  (s/and string? #(= 2 (count %))))
+
 (s/def ::error
   map?)
 
@@ -50,7 +53,7 @@
          #(< (count %) 20)))
 
 (s/def ::last4
-  (s/and string? #(= 4 (count %)))
+  (s/and string? #(= 4 (count %))))
 
 (s/def ::unix-timestamp
   integer?)
@@ -107,6 +110,10 @@
 
 (defn currency? [x]
   (s/valid? ::currency-id x))
+
+
+(defn country? [x]
+  (s/valid? ::country-id x))
 
 
 (defn timestamp-query? [x]
