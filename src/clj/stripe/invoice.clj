@@ -236,8 +236,14 @@
 
 ;; pay-params ===============================================================
 
+(s/def ::source-map
+  (-> (s/keys :req-un [::account_number ::country ::currency]
+              :opt-un [::account_holder_name ::account_holder_type
+                       ::routing_number])
+      (ss/metadata)))
+
 (s/def ::source
-  string?)
+  (s/or :source-id string? :source-map ::source-map))
 
 (s/def ::pay-params
   (-> (s/keys :opt-un [::source])

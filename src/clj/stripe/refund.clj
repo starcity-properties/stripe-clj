@@ -143,11 +143,11 @@
   ([refund-id metadata]
    (update! refund-id metadata {}))
   ([refund-id metadata opts]
-   (h/post-req (str "refunds/" refund-id) (assoc-in opts [:params :metadata] metad))))
+   (h/post-req (str "refunds/" refund-id) (assoc-in opts [:params :metadata] metadata))))
 
 (s/fdef update!
         :args (s/cat :refund-id ::id
-                     :metadata map?
+                     :metadata ss/metadata?
                      :opts (s/? h/request-options?))
         :ret (ss/async ::refund))
 

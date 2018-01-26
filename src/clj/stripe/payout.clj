@@ -60,7 +60,7 @@
   #{"card" "bank_account" "bitcoin_receiver" "alipay_account"})
 
 (s/def ::statement_descriptor
-  (ss/statement-descriptor?))
+  ss/statement-descriptor?)
 
 (s/def ::status
   #{"paid" "pending" "in_transit" "canceled" "failed"})
@@ -111,7 +111,7 @@
 
 (s/def ::fetch-all-params
   (-> (s/keys :opt-un [:stripe.payout.fetch-all/arrival_date
-                    :stripe.payout.fetch-all/created ::destination
+                       :stripe.payout.fetch-all/created ::destination
                        ::ending_before ::limit ::starting_after ::status])
       (ss/metadata)))
 
@@ -181,7 +181,7 @@
 
 (s/fdef update!
         :args (s/cat :payout-id ::id
-                     :metadata map?
+                     :metadata ss/metadata?
                      :opts (s/? h/request-options?))
         :ret (ss/async ::payout))
 

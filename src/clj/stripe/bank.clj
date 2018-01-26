@@ -30,7 +30,7 @@
   string?)
 
 (s/def ::country
-  (ss/country?)
+  ss/country?)
 
 (s/def ::currency
   ss/currency?)
@@ -71,19 +71,19 @@
 
 (s/def ::update-params
   (-> (s/keys :opt-un [::account_holder_name ::account_holder_type]))
-      (ss/metadata))
+  (ss/metadata))
 
 ;; verify-params ==============================================================
 
 (s/def ::amounts
-  (ss/sublist pos-int?))
+  (s/cat :a1 pos-int? :a2 pos-int?))
 
 (s/def ::verification_method
   string?)
 
 (s/def ::verify-params
   (-> (s/keys :opt-un [::amounts ::verification_method]))
-      (ss/metadata))
+  (ss/metadata))
 
 ;; fetch-all-params ===========================================================
 
@@ -111,7 +111,10 @@
   ([customer-id source]
    (create! customer-id source {}))
   ([customer-id source opts]
-   (let [params {:source (assoc source :object "bank_account")}]
+   (do
+     (if (map? source)
+       (let [params {:source (assoc source :object "bank_account")}]
+         (let [params {:source source :object "bank_account"}])))
      (h/post-req (format "customers/%s/sources" customer-id)
                  (update opts :params merge params)))))
 
@@ -164,7 +167,7 @@
    (update! bank-account-id params {}))
   ([customer-id bank-account-id params opts]
    (let [params (assoc params :customer-id customer-id
-                              :bank-account-id bank-account-id)]
+                       :bank-account-id bank-account-id)]
      (h/post-req (format "customers/%s/sources/%s" customer-id bank-account-id)
                  (assoc opts :params params)))))
 
@@ -189,7 +192,7 @@
    (verify! customer-id bank-account-id params {}))
   ([customer-id bank-account-id params opts]
    (let [params (assoc params :customer-id customer-id
-                              :bank-account-id bank-account-id)]
+                       :bank-account-id bank-account-id)]
      (h/post-req (format "customers/%s/sources/%s/verify" customer-id bank-account-id)
                  (assoc opts :params params)))))
 
@@ -200,16 +203,16 @@
                                      :bank-account-id ::id
                                      :params ::verify-params)
                      :quaternary (s/cat :customer-id ::customer
-                                     :bank-account-id ::id
-                                     :params ::verify-params
-                                     :opts h/request-options?))
+                                        :bank-account-id ::id
+                                        :params ::verify-params
+                                        :opts h/request-options?))
         :ret (ss/async ::bank-account))
 
 
 (defn delete!
   "Delete a bank account from a customer."
   ([customer-id bank-account-id]
-   (delete! bank-account-id {}))
+   (delete! customer-id bank-account-id {}))
   ([customer-id bank-account-id opts]
    (h/post-req (format "customers/%s/sources/%s" customer-id bank-account-id))))
 
@@ -245,4 +248,4 @@
 
   ;; TODO (verify! x x) ; should return bank account with status of `verified`
 
-)
+  )
