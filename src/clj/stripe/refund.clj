@@ -15,7 +15,7 @@
 (s/def ::balance_transaction
   string?)
 
-(s/def ::charge-id
+(s/def ::charge
   string?)
 
 (s/def ::created
@@ -54,10 +54,10 @@
 
 
 (s/def ::amount-pcnt
-  float?)
+  decimal?)
 
 (s/def ::amount
-  float?)
+  integer?)
 
 (s/def ::reason
   string?)
@@ -93,16 +93,16 @@
    (create! charge-id {} {}))
   ([charge-id params]
    (create! charge-id params {}))
-  ([charge-id {:keys [amount-pcnt] :or {amount-pcnt 100.} :as params} opts]
+  ([charge-id {:keys [amount-pcnt] :or {amount-pcnt 1.} :as params} opts]
    (let [params (assoc params :currency currency :charge charge-id)]
      ;; calculate amount based on :amount-pcnt and dollar amount lookup in charge
      (h/post-req "refunds" (assoc opts :params params)))))
 
 (s/fdef create!
-        :args (s/alt :unary (s/cat :charge ::charge-id)
-                     :binary (s/cat :charge ::charge-id
+        :args (s/alt :unary (s/cat :charge-id ::charge)
+                     :binary (s/cat :charge-id ::charge
                                     :params ::refund-params)
-                     :ternary (s/cat :charge ::charge-id
+                     :ternary (s/cat :charge-id ::charge
                                      :params ::refund-params
                                      :opts (s/? h/request-options?))
         :ret (ss/async ::refund))

@@ -14,7 +14,7 @@
 
 
 (s/def ::statement_descriptor
-  (ss/statement-descriptor?))
+  ss/statement-descriptor?)
 
 (s/def ::charge-amount
   (s/and integer? #(>= % 50)))          ; minimum is 50 cents

@@ -14,7 +14,7 @@
 (s/def ::id
   string?)
 
-(s/def ::customer-id
+(s/def ::customer
   ::id)
 
 (s/def ::account
@@ -97,7 +97,7 @@
   string?)
 
 (s/def ::fetch-all-params
-  (s/keys :req-un [::customer-id]
+  (s/keys :req-un [::customer]
           :opt-un [::ending_before ::limit ::starting_after]))
 
 
@@ -116,7 +116,7 @@
                  (update opts :params merge params)))))
 
 (s/fdef create!
-        :args (s/cat :customer-id ::customer-id
+        :args (s/cat :customer-id ::customer
                      :source ::source
                      :opts (s/? h/request-options?))
         :ret (ss/async ::bank-account))
@@ -130,7 +130,7 @@
    (h/post-req (format "customers/%s/sources/%s" customer-id bank-account-id) opts)))
 
 (s/fdef fetch
-        :args (s/cat :customer-id ::customer-id
+        :args (s/cat :customer-id ::customer
                      :bank-account-id ::id
                      :opts h/request-options?)
         :ret (ss/async ::bank-account))
@@ -147,10 +147,10 @@
               (assoc opts :params params))))
 
 (s/fdef fetch-all
-        :args (s/alt :unary (s/cat :customer-id ::customer-id)
-                     :binary (s/cat :customer-id ::customer-id
+        :args (s/alt :unary (s/cat :customer-id ::customer)
+                     :binary (s/cat :customer-id ::customer
                                     :params ::fetch-all-params)
-                     :ternary (s/cat :customer-id ::customer-id
+                     :ternary (s/cat :customer-id ::customer
                                      :params ::fetch-all-params
                                      :opts h/request-options?))
         :ret (ss/async ::bank-accounts))
@@ -169,12 +169,12 @@
                  (assoc opts :params params)))))
 
 (s/fdef update!
-        :args (s/alt :binary (s/cat :customer-id ::customer-id
+        :args (s/alt :binary (s/cat :customer-id ::customer
                                     :bank-account-id ::id)
-                     :ternary (s/cat :customer-id ::customer-id
+                     :ternary (s/cat :customer-id ::customer
                                      :bank-account-id ::id
                                      :params ::update-params)
-                     :quaternary (s/cat :customer-id ::customer-id
+                     :quaternary (s/cat :customer-id ::customer
                                         :bank-account-id ::id
                                         :params ::update-params
                                         :opts h/request-options?))
@@ -194,12 +194,12 @@
                  (assoc opts :params params)))))
 
 (s/fdef verify!
-        :args (s/alt :binary (s/cat :customer-id ::customer-id
+        :args (s/alt :binary (s/cat :customer-id ::customer
                                     :bank-account-id ::id)
-                     :ternary (s/cat :customer-id ::customer-id
+                     :ternary (s/cat :customer-id ::customer
                                      :bank-account-id ::id
                                      :params ::verify-params)
-                     :quaternary (s/cat :customer-id ::customer-id
+                     :quaternary (s/cat :customer-id ::customer
                                      :bank-account-id ::id
                                      :params ::verify-params
                                      :opts h/request-options?))
@@ -214,7 +214,7 @@
    (h/post-req (format "customers/%s/sources/%s" customer-id bank-account-id))))
 
 (s/fdef delete!
-        :args (s/cat :customer-id ::customer-id
+        :args (s/cat :customer-id ::customer
                      :bank-account-id ::id
                      :opts (s/? h/request-options?))
         :ret (ss/async ss/deleted?))
