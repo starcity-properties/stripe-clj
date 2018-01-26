@@ -88,7 +88,7 @@
      ~@forms))
 
 (s/fdef with-token
-        :args (s/cat :token ::api-token
+        :args (s/cat :token (s/or :symbol symbol? :token ::api-token)
                      :forms (s/* list?))
         :ret list?)
 
@@ -96,8 +96,8 @@
 (defn use-token!
   "Permanently sets a base token. The token can still be overridden on
   a per-thread basis using with-token."
-  [s]
-  (alter-var-root #'*token* (constantly s)))
+  [t]
+  (alter-var-root #'*token* (constantly t)))
 
 
 ;; =====================================
@@ -107,6 +107,7 @@
 (defn api-version [] *api-version*)
 
 (s/fdef api-version
+        :args (s/cat)
         :ret (s/nilable string?))
 
 
@@ -161,26 +162,23 @@
 ;; =============================================================================
 
 
-(def ^:dynamic url "https://api.stripe.com/v1/")
+(def ^:dynamic *url* "https://api.stripe.com/v1/")
+
+
+(defmacro with-base-url
+  [u & forms]
+  `(binding [*url* ~u]
+     ~@forms))
 
 
 (defn method-url
   "URL for calling a method."
   [method]
-  (str url method))
+  (str *url* method))
 
 (s/fdef method-url
         :args (s/cat :method string?)
         :ret string?)
-
-
-(defn prepare-expansion
-  [expand]
-  (map name (u/collectify expand)))
-
-(s/fdef prepare-expansion
-        :args (s/cat :expand ::expansion)
-        :ret (s/+ string?))
 
 
 (defn- encode-params
@@ -198,11 +196,7 @@
 
   `params` is the parameters for the stripe API calls."
   [token method params opts]
-  (let [params      (if-let [expand (:expand params)]
-                      (-> (dissoc params :expand)
-                          (assoc "expand[]" (prepare-expansion expand)))
-                      params)
-        [k params'] (encode-params method params)
+  (let [[k params'] (encode-params method params)
         base-params {:basic-auth       token
                      :throw-exceptions false
                      k                 params'}
