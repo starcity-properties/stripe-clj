@@ -95,7 +95,7 @@
    (create! charge-id params {}))
   ([charge-id {:keys [amount-pcnt] :or {amount-pcnt 1.} :as params} opts]
    (let [params (assoc params :currency currency :charge charge-id)]
-     ;; calculate amount based on :amount-pcnt and dollar amount lookup in charge
+     ;; TODO calculate amount based on :amount-pcnt and dollar amount lookup in charge
      (h/post-req "refunds" (assoc opts :params params)))))
 
 (s/fdef create!
