@@ -111,12 +111,11 @@
   ([customer-id source]
    (create! customer-id source {}))
   ([customer-id source opts]
-   (do
-     (if (map? source)
-       (let [params {:source (assoc source :object "bank_account")}]
-         (let [params {:source source :object "bank_account"}])))
-     (h/post-req (format "customers/%s/sources" customer-id)
-                 (update opts :params merge params)))))
+   (if (map? source)
+     (let [params {:source (assoc source :object "bank_account")}])
+     (let [params {:source source}]))
+   (h/post-req (format "customers/%s/sources" customer-id)
+               (update opts :params merge params))))
 
 (s/fdef create!
         :args (s/cat :customer-id ::customer
