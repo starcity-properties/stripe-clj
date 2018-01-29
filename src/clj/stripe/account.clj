@@ -183,7 +183,8 @@
   ([type email params]
    (create! type email params {}))
   ([type email {:keys [country] :or {country "US"} :as params} opts]
-   (h/post-req "accounts" (assoc opts :params params))))
+   (let [params (assoc params :country country :type type :email email)]
+   (h/post-req "accounts" (assoc opts :params params)))))
 
 (s/fdef create!
         :args (s/alt :binary (s/cat :type ::type

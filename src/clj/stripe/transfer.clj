@@ -105,8 +105,9 @@
    (create! amount destination {} {}))
   ([amount destination params]
    (create! amount destination params {}))
-  ([{:keys [amount destination currency] :or {currency "usd"} :as params} opts]
-   (h/post-req "transfers" (assoc opts :params params))))
+  ([amount destination {:keys [currency] :or {currency "usd"} :as params} opts]
+   (let [params (assoc params :currency currency :amount amount :destination destination)]
+      (h/post-req "transfers" (assoc opts :params params)))))
 
 (s/fdef create!
         :args (s/alt :binary (s/cat :amount ::amount
