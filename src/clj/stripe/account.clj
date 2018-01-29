@@ -266,8 +266,8 @@
   ([account-id reason]
    (reject! account-id reason {}))
   ([account-id reason opts]
-   (let [params (assoc params :reason reason)]
-     (h/post-req (format "accounts/%s/reject" account-id) opts))))
+   (h/post-req (format "accounts/%s/reject" account-id)
+               (assoc-in opts [:params :reason] reason))))
 
 (s/fdef reject!
         :args (s/cat :account-id ::id
