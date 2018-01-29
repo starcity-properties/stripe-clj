@@ -70,8 +70,8 @@
 ;; update-params ==============================================================
 
 (s/def ::update-params
-  (-> (s/keys :opt-un [::account_holder_name ::account_holder_type]))
-  (ss/metadata))
+  (-> (s/keys :opt-un [::account_holder_name ::account_holder_type])
+      (ss/metadata)))
 
 ;; verify-params ==============================================================
 
@@ -82,8 +82,8 @@
   string?)
 
 (s/def ::verify-params
-  (-> (s/keys :opt-un [::amounts ::verification_method]))
-  (ss/metadata))
+  (-> (s/keys :opt-un [::amounts ::verification_method])
+      (ss/metadata)))
 
 ;; fetch-all-params ===========================================================
 
