@@ -59,10 +59,8 @@
 (s/def ::source_type
   #{"card" "bank_account" "bitcoin_receiver" "alipay_account"})
 
-;; TODO: use reusable `ss/statement-descriptor?` in `stripe.spec` after merging
-;; from upstream.
 (s/def ::statement_descriptor
-  (s/nilable string?))
+  ss/statement-descriptor?)
 
 (s/def ::status
   #{"paid" "pending" "in_transit" "canceled" "failed"})
@@ -88,24 +86,34 @@
 
 
 (s/def ::create-params
-  (s/keys :opt-un [::currency ::description ::destination ::method
-                   ::source_type ::statement_descriptor]))
+  (-> (s/keys :opt-un [::currency ::description ::destination ::method
+                       ::source_type ::statement_descriptor])
+      (ss/metadata)))
 
 
 ;; fetch-all ================================================================
 
-(s/def :fetch-all/arrival_date
+
+(s/def :stripe.payout.fetch-all/arrival_date
   ss/timestamp-query?)
 
-(s/def :fetch-all/created
+(s/def :stripe.payout.fetch-all/created
   ss/timestamp-query?)
+
+(s/def ::ending_before
+  string?)
 
 (s/def ::limit
   integer?)
 
+(s/def ::starting_after
+  string?)
+
 (s/def ::fetch-all-params
-  (s/keys :opt-un [:stripe.payout.fetch-all/arrival_date :stripe.payout.fetch-all/created ::destination
-                   ::ending_before ::limit ::starting_after ::status]))
+  (-> (s/keys :opt-un [:stripe.payout.fetch-all/arrival_date
+                       :stripe.payout.fetch-all/created ::destination
+                       ::ending_before ::limit ::starting_after ::status])
+      (ss/metadata)))
 
 
 ;; ==========================================================================
@@ -173,7 +181,7 @@
 
 (s/fdef update!
         :args (s/cat :payout-id ::id
-                     :metadata map?
+                     :metadata ss/metadata?
                      :opts (s/? h/request-options?))
         :ret (ss/async ::payout))
 
@@ -209,7 +217,7 @@
   (= 3 (count (:data (fetch-all {:limit 3}))))
 
   ;; TODO check test once merged branch
-  (fetch-all {:created {:gt 1515723919}})
+  (fetch-all {:created {:lt 1516327443}})
 
   ;; TODO test cancel!
   )

@@ -29,6 +29,9 @@
 (s/def ::currency-id
   (s/and string? #(= 3 (count %))))
 
+(s/def ::country-id
+  (s/and string? #(= 2 (count %))))
+
 (s/def ::error
   map?)
 
@@ -48,6 +51,9 @@
   (s/and (s/map-of keyword? string?)
          ;; Only 20 KV pairs are currently supported.
          #(< (count %) 20)))
+
+(s/def ::last4
+  (s/and string? #(= 4 (count %))))
 
 (s/def ::unix-timestamp
   integer?)
@@ -106,12 +112,20 @@
   (s/valid? ::currency-id x))
 
 
+(defn country? [x]
+  (s/valid? ::country-id x))
+
+
 (defn timestamp-query? [x]
   (s/valid? ::timestamp-query x))
 
 
 (defn limit? [x]
   (s/valid? ::limit x))
+
+
+(defn last4? [x]
+  (s/valid? ::last4 x))
 
 
 ;; sublist ==============================

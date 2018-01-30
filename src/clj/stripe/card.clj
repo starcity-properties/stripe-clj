@@ -87,9 +87,6 @@
 (s/def ::funding
   #{"credit" "debit" "prepaid" "unknown"})
 
-(s/def ::last4
-  (s/and string? #(= 4 (count %))))
-
 (s/def ::name
   (s/nilable string?))
 
@@ -101,7 +98,7 @@
 
 (s/def ::card
   (-> (s/keys :req-un [::id ::brand ::country ::customer ::exp_month
-                       ::exp_year ::fingerprint ::funding ::last4 ]
+                       ::exp_year ::fingerprint ::funding :stripe.spec/last4 ]
               :opt-un [::account ::address_city ::address_country
                        ::address_line1 ::address_line1_check
                        ::address_line2 ::address_state ::address_zip
@@ -120,7 +117,6 @@
 
 (s/def ::source
   (s/or :source-id string? :source-map ::source-map))
-
 
 ;; update-params ========================
 
@@ -160,14 +156,16 @@
   ([customer-id source]
    (create! customer-id source {}))
   ([customer-id source opts]
-   (let [params {:source (assoc source :object "card")}]
-     (h/post-req (format "customers/%s/sources" customer-id)
-                 (update opts :params merge params)))))
+   (if (map? source)
+     (let [params {:source (assoc source :object "card")}])
+     (let [params {:source source}]))
+   (h/post-req (format "customers/%s/sources" customer-id)
+               (update opts :params merge params))))
 
 (s/fdef create!
         :args (s/cat :customer-id ::id
                      :source ::source
-                     :opts (s/? (h/request-options?)))
+                     :opts (s/? h/request-options?))
         :ret (ss/async ::card))
 
 
@@ -181,7 +179,7 @@
 (s/fdef fetch
         :args (s/cat :customer-id ::id
                      :source-id ::id
-                     :opts (s/? (h/request-options?)))
+                     :opts (s/? h/request-options?))
         :ret (ss/async ::card))
 
 
@@ -197,7 +195,7 @@
         :args (s/cat :customer-id ::id
                      :card-id ::id
                      :params ::update-params
-                     :opts (s/? (h/request-options?)))
+                     :opts (s/? h/request-options?))
         :ret (ss/async ::card))
 
 
@@ -211,7 +209,7 @@
 (s/fdef delete!
         :args (s/cat :customer-id ::id
                      :card-id ::id
-                     :opts (s/? (h/request-options?)))
+                     :opts (s/? h/request-options?))
         :ret (ss/async ss/deleted?))
 
 
@@ -228,7 +226,7 @@
 (s/fdef fetch-all
         :args (s/cat :customer-id ::id
                      :params (s/? ::fetch-all-params)
-                     :opts (s/? (h/request-options?)))
+                     :opts (s/? h/request-options?))
         :ret (ss/async ::cards))
 
 (comment

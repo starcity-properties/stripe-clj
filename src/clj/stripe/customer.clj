@@ -29,14 +29,11 @@
 (s/def ::email
   (s/nilable string?))
 
-(s/def ::last4
-  string?)
-
 (s/def ::currency
   ss/currency?)
 
 (s/def ::country
-  string?)
+  ss/country?)
 
 (s/def ::account_number
   string?)
@@ -136,7 +133,7 @@
   (s/valid? ::customer-id x))
 
 (defn- source [spec]
-  (-> (s/keys :req-un [::id ::last4 ::country ::fingerprint
+  (-> (s/keys :req-un [::id :stripe.spec/last4 ::country ::fingerprint
                        :source/customer])
       (s/and spec)
       (ss/metadata)))
@@ -146,7 +143,7 @@
 
 (defmethod source-type "bank_account" [_]
   (source
-   (s/keys :req-un [::bank_name ::currency ::status ::currency
+   (s/keys :req-un [::bank_name ::currency ::status
                     ::account_holder_type ::account_holder_name]
            :opt-un [::routing_number])))
 
