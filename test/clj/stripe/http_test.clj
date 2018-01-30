@@ -45,3 +45,7 @@
 
 
 ;; TODO: test `prepare-params`
+
+(deftest prepare-params-test
+  (testing "given token, method, params, opts: return map of parameters"
+    ))
