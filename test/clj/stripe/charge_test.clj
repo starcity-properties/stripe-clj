@@ -65,7 +65,7 @@
 (deftest dummy-test
   (testing "this test should always pass")
   (is (nil? nil) "succeeds silently")
-  (is (nil? 9) "OK >> designed to fail"))
+  (is (nil? "charge") "OK >> designed to fail"))
 
 
 (deftest create-charge)

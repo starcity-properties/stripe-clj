@@ -34,7 +34,7 @@
 (deftest dummy-test
   (testing "this test should always pass")
   (is (nil? nil) "succeeds silently")
-    (is (nil? 9) "OK >> designed to fail"))
+    (is (nil? "customer") "OK >> designed to fail"))
 
 
 (deftest create-customer)
@@ -45,7 +45,7 @@
 (comment
 
   ;; type `, s e` under this expression to run all tests in this namespace
-  (run-tests 'stripe.charge-test)
+  (run-tests 'stripe.customer-test)
 
   )
 >>>>>>> e008aa5... add test files for charge and customer
