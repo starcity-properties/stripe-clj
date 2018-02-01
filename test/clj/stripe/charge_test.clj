@@ -60,3 +60,22 @@
     (h/with-base-url (str uri "/")
       (let [{:keys [method path body] :as res} (charge/fetch "id" {})]
         (println res)))))
+
+
+(deftest dummy-test
+  (testing "this test should always pass")
+  (is (nil? nil) "succeeds silently")
+  (is (nil? 9) "OK >> designed to fail"))
+
+
+(deftest create-charge)
+;; (is (map? create! 100 {:customer "cus_BzZW6T3NzySJ5E"}))
+
+
+
+(comment
+
+  ;; type `, s e` under this expression to run all tests in this namespace
+  (run-tests 'stripe.charge-test)
+
+  )
