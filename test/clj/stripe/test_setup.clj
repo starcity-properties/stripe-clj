@@ -1,6 +1,8 @@
 (ns stripe.test
-  (:require [stripe.customer :as c]
+  (:require [environ.core :as e]
+            [stripe.customer :as c]
             [stripe.http :as h]))
+
 
 ;; ## Helpers for Testing
 
@@ -13,14 +15,6 @@
      (try ~@body
           (finally (c/delete-customer (:id ~sym))))))
 
-(defmacro with-recipient
-  "Synchronously creates a recipient and binds it to `sym` for the
-  body of the test. The macro deletes the recipient after the body
-  runs, but still returns the last form of the supplied body."
-  [[sym data] & body]
-  `(let [~sym (r/create-recipient ~data)]
-     (try ~@body
-          (finally (r/delete-recipient (:id ~sym))))))
 
 (defn env-token
   "Clojure.test fixture that sets the stripe token for all tests using
@@ -31,5 +25,13 @@
     (h/with-token (k e/env)
       (test-fn))))
 
-(defn api-version-fixture [v]
-  (fn [f] (h/with-api-version v (f))))
+
+(defn api-token-fixture [token]
+  (fn [test-f]
+    (h/with-token token
+      (test-f))))
+
+
+(use-fixtures :once (api-token-fixture "test-token"))
+
+(use-fixtures :once (env-token :stripe-dev-token))
