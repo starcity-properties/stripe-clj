@@ -18,10 +18,10 @@
   integer?)
 
 (s/def ::application_fee
-  integer?) bb
+  integer?)
 
 (s/def ::attempt_count
-  (s/or pos-int? zero?))
+  (s/or :positive pos-int? :zero zero?))
 
 (s/def ::attempted
   boolean?)
@@ -39,7 +39,7 @@
   ss/currency?)
 
 (s/def ::customer
-  string)
+  string?)
 
 (s/def ::date
   ss/timestamp-query?)
@@ -192,57 +192,57 @@
 ;; ==========================================================================
 
 
-(defn create!
-  )
+;; (defn create!
+;;   )
 
-(s/fdef create!
-        :args
-        :ret)
-
-
-(defn fetch
-  )
-
-(s/fdef fetch
-        :args
-        :ret)
+;; (s/fdef create!
+;;         :args
+;;         :ret)
 
 
-(defn fetch-all
-  )
+;; (defn fetch
+;;   )
 
-(s/fdef fetch-all
-        :args
-        :ret)
-
-
-(defn fetch-line-items
-  )
-
-(s/fdef fetch-line-items
-        :args
-        :ret)
+;; (s/fdef fetch
+;;         :args
+;;         :ret)
 
 
-(defn fetch-upcoming
-  )
+;; (defn fetch-all
+;;   )
 
-(s/fdef fetch-upcoming
-        :args
-        :ret)
-
-
-(defn update!
-  )
-
-(s/fdef update!
-        :args
-        :ret)
+;; (s/fdef fetch-all
+;;         :args
+;;         :ret)
 
 
-(defn pay!
-  )
+;; (defn fetch-line-items
+;;   )
 
-(s/fdef pay!
-        :args
-        :ret)
+;; (s/fdef fetch-line-items
+;;         :args
+;;         :ret)
+
+
+;; (defn fetch-upcoming
+;;   )
+
+;; (s/fdef fetch-upcoming
+;;         :args
+;;         :ret)
+
+
+;; (defn update!
+;;   )
+
+;; (s/fdef update!
+;;         :args
+;;         :ret)
+
+
+;; (defn pay!
+;;   )
+
+;; (s/fdef pay!
+;;         :args
+;;         :ret)

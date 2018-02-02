@@ -96,24 +96,24 @@
 (s/def ::tokenization_method
   (s/nilable #{"apple_pay" "android_pay"}))
 
+(defn base-card [mspec]
+  (-> (s/keys :opt-un [::address_city ::address_country ::address_line1
+                       ::address_line2 ::address_state ::address_zip])
+      (s/merge mspec)))
+
 (s/def ::card
   (-> (s/keys :req-un [::id ::brand ::country ::customer ::exp_month
-                       ::exp_year ::fingerprint ::funding :stripe.spec/last4 ]
-              :opt-un [::account ::address_city ::address_country
-                       ::address_line1 ::address_line1_check
-                       ::address_line2 ::address_state ::address_zip
-                       ::address_zip ::address_zip_check ::payout-method
-                       ::customer ::cvc_check ::dynamic_last4 ::name
-                       ::recipient ::tokenization_method])
-      (ss/metadata)
+                       ::exp_year ::fingerprint ::funding :stripe.spec/last4]
+              :opt-un [::account ::address_line1_check ::address_zip_check
+                       ::payout-method ::customer ::cvc_check ::dynamic_last4 ::name
+                       ::recipient ::tokenization_method :stripe.spec/metadata])
+      (base-card)
       (ss/stripe-object "card")))
 
 (s/def ::source-map
   (-> (s/keys :req-un [::exp_month ::exp_year ::number ::cvc]
-              :opt-un [::address_city ::address_country ::address_line1
-                       ::address_line2 ::address_state ::address_zip
-                       ::currency ::default_for_currency ::name])
-      (ss/metadata)))
+              :opt-un [::currency ::default_for_currency ::name :stripe.spec/metadata])
+      (base-card)))
 
 (s/def ::source
   (s/or :source-id string? :source-map ::source-map))
@@ -121,10 +121,7 @@
 ;; update-params ========================
 
 (s/def ::update-params
-  (-> (s/keys :opt-un [::address_city ::address_country ::address_line1
-                       ::address_line2 ::address_state ::address_zip
-                       ::exp_month ::exp_year])
-      (ss/metadata)))
+  (base-card (s/keys :opt-un [::exp_month ::exp_year :stripe.spec/metadata])))
 
 ;; fetch-all-params =====================
 
@@ -156,11 +153,11 @@
   ([customer-id source]
    (create! customer-id source {}))
   ([customer-id source opts]
-   (if (map? source)
-     (let [params {:source (assoc source :object "card")}])
-     (let [params {:source source}]))
-   (h/post-req (format "customers/%s/sources" customer-id)
-               (update opts :params merge params))))
+   (let [params (if (map? source)
+                  {:source (assoc source :object "card")}
+                  {:source source})]
+     (h/post-req (format "customers/%s/sources" customer-id)
+                 (update opts :params merge params)))))
 
 (s/fdef create!
         :args (s/cat :customer-id ::id

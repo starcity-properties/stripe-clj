@@ -9,4 +9,9 @@
                  [cheshire "5.8.0"]
                  [starcity/toolbelt-async "0.4.0"]
                  [starcity/toolbelt-core "0.3.0"]]
-  :source-paths ["src/clj"])
+
+  :source-paths ["src/clj"]
+
+  :repl-options {:init-ns user}
+
+  :profiles {:dev {:source-paths ["src/clj" "test/clj" "env/dev"]}})

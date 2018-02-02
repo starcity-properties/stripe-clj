@@ -21,7 +21,7 @@
   integer?)
 
 (s/def ::attempt_count
-  (s/or pos-int? zero?))
+  (s/or :positive pos-int? :zero zero?))
 
 (s/def ::attempted
   boolean?)
@@ -39,7 +39,7 @@
   ss/currency?)
 
 (s/def ::customer
-  string)
+  string?)
 
 (s/def ::date
   ss/timestamp-query?)
