@@ -5,7 +5,6 @@
             [stripe.bank]
             [stripe.card]
             [stripe.charge]
-            [stripe.connect]
             [stripe.customer]
             [stripe.event]
             [stripe.http]
