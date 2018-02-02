@@ -1,13 +1,24 @@
 (ns stripe.customer-test
-  (:require [stripe.http :as h]
-            [clojure.spec.test.alpha :as stest]
-            [clojure.test :refer :all]))
-
+  (:require [clojure.test :refer :all]
+            [stripe.http :as h]))
 
 (deftest dummy-test
   (testing "this test should always pass")
   (is (nil? nil) "succeeds silently")
-    (is (nil? "customer") "OK >> designed to fail"))
+  (is (nil? "customer") "OK >> designed to fail"))
+
+
+(defn api-token-fixture [token]
+  (fn [f]
+    (h/with-token token
+      (f))))
+
+(use-fixtures :once (api-token-fixture "test-token"))
+
+
+
+
+
 
 
 (deftest create-customer)

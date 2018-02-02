@@ -1,17 +1,18 @@
 (ns stripe.charge-test
-  (:require [clojure.spec.test.alpha :as stest]
-            [clojure.test :refer :all]
-            [ring.util.codec :refer [form-decode]]
+  (:require [clojure.test :refer :all]
+            [cheshire.core :as json]
+            [ring.util.codec :as codec]
             [stripe.charge :as charge]
-            [stub-http.core :as stub :refer [with-routes!]]
             [stripe.http :as h]
-            [cheshire.core :as json]))
+            [stub-http.core :as stub :refer [with-routes!]]))
 
 
 (defn api-token-fixture [token]
   (fn [f]
     (h/with-token token
       (f))))
+
+(use-fixtures :once (api-token-fixture "test-token"))
 
 
 (defn keywordize-keys [m]
@@ -31,7 +32,7 @@
 
 (defn decode-post-body [m]
   (-> (assoc m :body (get-in m [:body :postData]))
-      (update :body (comp keywordize-keys form-decode))))
+      (update :body (comp keywordize-keys codec/form-decode))))
 
 
 #_(defmacro with-stripe-routes! [route-specs & forms]
@@ -40,8 +41,6 @@
        (h/with-base-url 'uri
          ~@forms)))
 
-
-(use-fixtures :once (api-token-fixture "test-token"))
 
 
 (deftest create-charge-test
@@ -62,15 +61,15 @@
         (println res)))))
 
 
-(deftest dummy-test
-  (testing "this test should always pass")
-  (is (nil? nil) "succeeds silently")
-  (is (nil? "charge") "OK >> designed to fail"))
-
 
 (deftest create-charge)
 ;; (is (map? create! 100 {:customer "cus_BzZW6T3NzySJ5E"}))
 
+
+(deftest dummy-test
+  (testing "this test should always pass")
+  (is (nil? nil) "succeeds silently")
+  (is (nil? "charge") "OK >> designed to fail"))
 
 
 (comment
