@@ -1,7 +1,8 @@
 (ns stripe.plan
   (:require [clojure.spec.alpha :as s]
             [stripe.spec :as ss]
-            [stripe.http :as h]))
+            [stripe.http :as h]
+            [clojure.core.async :as a]))
 
 
 ;; ==============================================================================
@@ -45,6 +46,9 @@
               :opt-un [::statement_descriptor ::trial_period_days])
       (ss/metadata)
       (ss/stripe-object "plan")))
+
+(def plan?
+  (partial s/valid? ::plan))
 
 ;; create-params ========================
 
@@ -96,11 +100,18 @@
      (h/post-req "plans" (assoc opts :params params')))))
 
 (s/fdef create!
-        :args (s/cat :name ::name
-                     :interval ::interval
-                     :amount ::amount
-                     :params (s/? ::create-params)
-                     :opts (s/? h/request-options?))
+        :args (s/alt :ternary (s/cat :name ::name
+                                     :interval ::interval
+                                     :amount ::amount)
+                     :quaternary (s/cat :name ::name
+                                        :interval ::interval
+                                        :amount ::amount
+                                        :params ::create-params)
+                     :quinary (s/cat :name ::name
+                                     :interval ::interval
+                                     :amount ::amount
+                                     :params ::create-params
+                                     :opts h/request-options?))
         :ret (ss/async ::plan))
 
 
@@ -112,8 +123,9 @@
    (h/get-req (str "plans/" (stripe.util.codec/form-encode plan-id)) opts)))
 
 (s/fdef fetch
-        :args (s/cat :plan-id ::id
-                     :opts (s/? h/request-options?))
+        :args (s/alt :unary (s/cat :plan-id ::id)
+                     :binary (s/cat :plan-id ::id
+                                    :opts h/request-options?))
         :ret (ss/async ::plan))
 
 
@@ -126,9 +138,11 @@
                (assoc opts :params params))))
 
 (s/fdef update!
-        :args (s/cat :plan-id ::id
-                     :params ::update-params
-                     :opts (s/? h/request-options?))
+        :args (s/alt :binary (s/cat :plan-id ::id
+                                    :params ::update-params)
+                     :ternary (s/cat :plan-id ::id
+                                   :params ::update-params
+                                   :opts h/request-options?))
         :ret (ss/async ::plan))
 
 
@@ -140,8 +154,9 @@
    (h/delete-req (str "plans/" (stripe.util.codec/form-encode plan-id)) opts)))
 
 (s/fdef delete!
-        :args (s/cat :plan-id ::id
-                     :opts (s/? h/request-options?))
+        :args (s/alt :unary (s/cat :plan-id ::id)
+                     :binary (s/cat :plan-id ::id
+                                    :opts h/request-options?))
         :ret (ss/async ss/deleted?))
 
 
@@ -152,12 +167,13 @@
   ([params]
    (fetch-all params {}))
   ([params opts]
-   (h/get-req (str "plans")
-              (assoc opts :params params))))
+   (h/get-req "plans" (assoc opts :params params))))
 
 (s/fdef fetch-all
-        :args (s/cat :params (s/? ::fetch-all-params)
-                     :opts (s/? h/request-options?))
+        :args (s/alt :nullary (s/cat)
+                     :unary (s/cat :params ::fetch-all-params)
+                     :binary (s/cat :params ::fetch-all-params
+                                     :opts h/request-options?))
         :ret (ss/async ::plans))
 
 
