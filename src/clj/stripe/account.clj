@@ -292,7 +292,7 @@
    (delete! account-id {}))
   ([account-id opts]
    ;; TODO if no account-id provided defaults to account of API key
-   (h/post-req (str "accounts/" account-id) opts)))
+   (h/delete-req (str "accounts/" account-id) opts)))
 
 (s/fdef delete!
         :args (s/cat :account-id ::id

@@ -216,7 +216,7 @@
   ([customer-id bank-account-id]
    (delete! customer-id bank-account-id {}))
   ([customer-id bank-account-id opts]
-   (h/post-req (format "customers/%s/sources/%s" customer-id bank-account-id))))
+   (h/delete-req (format "customers/%s/sources/%s" customer-id bank-account-id))))
 
 (s/fdef delete!
         :args (s/cat :customer-id ::customer

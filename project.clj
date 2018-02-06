@@ -14,4 +14,5 @@
 
   :repl-options {:init-ns user}
 
-  :profiles {:dev {:source-paths ["src/clj" "test/clj" "env/dev"]}})
+  :profiles {:dev {:source-paths ["src/clj" "test/clj" "env/dev"]
+                   :dependencies []}})
