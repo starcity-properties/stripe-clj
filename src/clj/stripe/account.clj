@@ -224,7 +224,7 @@
   ([account-id external-account-id opts]
    (h/get-req (format "accounts/%s/external_accounts/%s" account-id external-account-id) opts)))
 
-(s/fdef fetch
+(s/fdef fetch-external-account
         :args (s/cat :account-id ::id
                      :external-account-id ::id
                      :opts (s/? h/request-options?))
@@ -246,6 +246,25 @@
                      :binary (s/cat :params ::fetch-all-params
                                     :opts h/request-options?))
         :ret (ss/async ::accounts))
+
+
+(defn fetch-all-external-accounts
+  "Fetch a list of external accounts associated with Connect account."
+  ([account-id]
+   (fetch-all account-id {} {}))
+  ([account-id params]
+   (fetch-all account-id params {}))
+  ([account-id params opts]
+   (h/get-req (format "accounts/%s/external_accounts" account-id) (assoc opts :params params))))
+
+(s/fdef fetch-all-external-accounts
+        :args (s/alt :unary (s/cat :account-id ::id)
+                     :binary (s/cat :account-id ::id
+                                    :params ::fetch-all-params)
+                     :ternary (s/cat :account-id ::id
+                                     :params ::fetch-all-params
+                                     :opts h/request-options?))
+        :ret (ss/async ::external_accounts))
 
 
 (defn update!
