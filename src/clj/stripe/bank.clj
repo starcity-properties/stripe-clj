@@ -55,6 +55,9 @@
       (ss/metadata)
       (ss/stripe-object "bank_account")))
 
+(defn bank? [x]
+  (s/valid? ::bank-account x))
+
 (s/def ::bank-accounts
   (ss/sublist ::bank-account))
 

@@ -1,6 +1,8 @@
 (ns stripe.account
   "Functions for Stripe's account API."
   (:require [clojure.spec.alpha :as s]
+            [stripe.bank :as b]
+            [stripe.card :as c]
             [stripe.http :as h]
             [toolbelt.async :as ta]
             [stripe.spec :as ss]))
@@ -55,8 +57,11 @@
 (s/def ::email
   string?)                             ;; email address
 
+(s/def ::external-account
+  (s/or :bank b/bank? :card c/card?))
+
 (s/def ::external_accounts
-  map?)                                ;; TODO bank account or card objects with child attributes
+  (ss/sublist ::external-account))
 
 (s/def ::legal_entity
   map?)                                ;; TODO child attributes
@@ -105,7 +110,7 @@
       (ss/metadata)
       (ss/stripe-object "account")))
 
-(s/def ::acounts
+(s/def ::accounts
   (ss/sublist ::account))
 
 
@@ -210,6 +215,20 @@
         :args (s/cat :account-id ::id
                      :opts (s/? h/request-options?))
         :ret (ss/async ::account))
+
+
+(defn fetch-external-account
+  "Retrieve associated bank or card account (external account) of Connect account."
+  ([account-id external-account-id]
+   (fetch-external-account account-id external-account-id {}))
+  ([account-id external-account-id opts]
+   (h/get-req (format "accounts/%s/external_accounts/%s" account-id external-account-id) opts)))
+
+(s/fdef fetch
+        :args (s/cat :account-id ::id
+                     :external-account-id ::id
+                     :opts (s/? h/request-options?))
+        :ret (ss/async ::external-account))
 
 
 (defn fetch-all
