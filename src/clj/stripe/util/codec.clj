@@ -20,8 +20,15 @@
      []
      m)))
 
+(defn- flatten-keys
+  [ps]
+  (map #(str "[" (name %) "]") ps))
+
 (defn- parameterize [[p & ps]]
-  (apply str (name p) (map #(str "[" (name %) "]") ps)))
+  (apply str (name p) (flatten-keys ps)))
+
+(defn- parameterize-index [[p & ps] index]
+  (apply str (name p) "[" index "]" (flatten-keys ps)))
 
 (defprotocol ^:no-doc FormEncodeable
   (form-encode* [this encoding]))
@@ -34,8 +41,17 @@
   (form-encode* [params encoding]
     (letfn [(encode [x]
               (form-encode* x encoding))
-            (encode-array-param [[k v]]
-              (str (encode (name k)) "[]=" (encode v)))
+            (encode-array-param [index k v]
+              (if (map? v)
+                (let [params (->> (flatten-map v) (map (partial cons k)))]
+                  (->> params
+                       (map
+                        (fn [param]
+                          (let [value (last param)
+                                name (parameterize-index (butlast param) index)]
+                            (str name "=" value))))
+                       (str/join "&")))
+                (str (encode (name k)) "[]=" (encode v))))
             (encode-map-params [[k v]]
               (let [params (->> (flatten-map v) (map (partial cons k)))]
                 (map (fn [param]
@@ -51,7 +67,7 @@
            (mapcat
             (fn [[k v]]
               (cond
-                (or (seq? v) (sequential? v)) (map #(encode-array-param [k %]) v)
+                (or (seq? v) (sequential? v)) (map-indexed #(encode-array-param %1 k %2) v)
                 (map? v)                      (encode-map-params [k v])
                 :otherwise                    [(encode-param [k v])])))
            (str/join "&"))))

@@ -110,8 +110,8 @@
       (base-card)
       (ss/stripe-object "card")))
 
-(defn card? [x]
-  (s/valid? ::card x))
+(def card?
+  (partial s/valid? ::car))
 
 (s/def ::source-map
   (-> (s/keys :req-un [::exp_month ::exp_year ::number ::cvc]
@@ -163,9 +163,11 @@
                  (update opts :params merge params)))))
 
 (s/fdef create!
-        :args (s/cat :customer-id ::id
-                     :source ::source
-                     :opts (s/? h/request-options?))
+        :args (s/alt :binary (s/cat :customer-id ::id
+                                    :source ::source)
+                     :ternary (s/cat :customer-id ::id
+                                     :source ::source
+                                     :opts h/request-options?))
         :ret (ss/async ::card))
 
 
@@ -177,9 +179,11 @@
    (h/get-req (format "customers/%s/sources/%s" customer-id source-id) opts)))
 
 (s/fdef fetch
-        :args (s/cat :customer-id ::id
-                     :source-id ::id
-                     :opts (s/? h/request-options?))
+        :args (s/alt :binary (s/cat :customer-id ::id
+                                    :source-id ::id)
+                     :ternary (s/cat :customer-id ::id
+                                     :source-id ::id
+                                     :opts h/request-options?))
         :ret (ss/async ::card))
 
 
@@ -192,10 +196,12 @@
                (assoc opts :params params))))
 
 (s/fdef update!
-        :args (s/cat :customer-id ::id
-                     :card-id ::id
-                     :params ::update-params
-                     :opts (s/? h/request-options?))
+        :args (s/alt :binary (s/cat :customer-id ::id
+                                    :card-id ::id)
+                     :ternary (s/cat :customer-id ::id
+                                     :card-id ::id
+                                     :params ::update-params
+                                     :opts h/request-options?))
         :ret (ss/async ::card))
 
 
@@ -207,9 +213,11 @@
    (h/delete-req (format "customers/%s/sources/%s" customer-id card-id) opts)))
 
 (s/fdef delete!
-        :args (s/cat :customer-id ::id
-                     :card-id ::id
-                     :opts (s/? h/request-options?))
+        :args (s/alt :binary (s/cat :customer-id :id
+                                    :card-id ::id)
+                     :ternary (s/cat :customer-id ::id
+                                     :card-id ::id
+                                     :opts h/request-options?))
         :ret (ss/async ss/deleted?))
 
 
@@ -224,9 +232,12 @@
               (assoc opts :params params))))
 
 (s/fdef fetch-all
-        :args (s/cat :customer-id ::id
-                     :params (s/? ::fetch-all-params)
-                     :opts (s/? h/request-options?))
+        :args (s/alt :unary (s/cat :customer-id ::id)
+                     :binary (s/cat :customer-id ::id
+                                    :params ::fetch-all-params)
+                     :ternary (s/cat :customer-id ::id
+                                     :params ::fetch-all-params
+                                     :opts h/request-options?))
         :ret (ss/async ::cards))
 
 (comment
