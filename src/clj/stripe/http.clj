@@ -38,11 +38,14 @@
 (s/def ::token
   ::api-token)
 
+(s/def ::throw-exception?
+  ::boolean)
+
 (s/def ::account
   string?)
 
 (s/def ::request-options
-  (s/keys :opt-un [::account ::out-ch ::params ::client-options ::token]))
+  (s/keys :opt-un [::account ::out-ch ::params ::client-options ::token ::throw-exception?]))
 
 (s/def ::endpoint
   string?)
@@ -217,11 +220,23 @@
 ;; =============================================================================
 
 
+(defn response [res]
+  (get res ::response))
+
+
+(defn status [res]
+  (:status (response res)))
+
+
+(defn headers [res]
+  (:headers (response res)))
+
+
 (defn api-call
   "Call an API method on Stripe. If an output channel is supplied, the
   method will place the result in that channel; if not, returns
   synchronously."
-  [{:keys [params client-options token account method endpoint out-ch]
+  [{:keys [params client-options token account method endpoint out-ch throw-exception?]
     :or   {params         {}
            client-options {}
            account        *connect-account*
@@ -231,7 +246,8 @@
         params' (->> (assoc client-options :account account)
                      (prepare-params token method params))
         process (fn [ret]
-                  (or (json/parse-string (:body ret) keyword)
+                  (or (-> (json/parse-string (:body ret) keyword)
+                          (assoc ::response ret))
                       {:error (:error ret)}))]
     (if-not (some? out-ch)
       (process @(method url params'))
