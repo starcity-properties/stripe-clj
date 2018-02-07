@@ -89,7 +89,7 @@
 (defn create!
   "Create a plan."
   ([name interval amount]
-   (create! name interval amount {}))
+   (create! name interval amount {} {}))
   ([name interval amount params]
    (create! name interval amount params {}))
   ([name interval amount params opts]
@@ -123,9 +123,8 @@
    (h/get-req (str "plans/" (stripe.util.codec/form-encode plan-id)) opts)))
 
 (s/fdef fetch
-        :args (s/alt :unary (s/cat :plan-id ::id)
-                     :binary (s/cat :plan-id ::id
-                                    :opts h/request-options?))
+        :args (s/cat :plan-id ::id
+                     :opts (s/? h/request-options?))
         :ret (ss/async ::plan))
 
 
@@ -138,11 +137,9 @@
                (assoc opts :params params))))
 
 (s/fdef update!
-        :args (s/alt :binary (s/cat :plan-id ::id
-                                    :params ::update-params)
-                     :ternary (s/cat :plan-id ::id
-                                   :params ::update-params
-                                   :opts h/request-options?))
+        :args (s/cat :plan-id ::id
+                     :params ::update-params
+                     :opts (s/? h/request-options?))
         :ret (ss/async ::plan))
 
 
@@ -154,9 +151,8 @@
    (h/delete-req (str "plans/" (stripe.util.codec/form-encode plan-id)) opts)))
 
 (s/fdef delete!
-        :args (s/alt :unary (s/cat :plan-id ::id)
-                     :binary (s/cat :plan-id ::id
-                                    :opts h/request-options?))
+        :args (s/cat :plan-id ::id
+                     :opts (s/? h/request-options?))
         :ret (ss/async ss/deleted?))
 
 

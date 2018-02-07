@@ -26,8 +26,7 @@
   string?)
 
 (s/def ::subscription-item
-  (-> (s/keys :req-un [::id ::created ::plan ::quantity
-                       ::subscription])
+  (-> (s/keys :req-un [::id ::created ::plan ::quantity ::subscription])
       (ss/metadata)
       (ss/stripe-object "subscription_item")))
 

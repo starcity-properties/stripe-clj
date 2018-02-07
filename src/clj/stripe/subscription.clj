@@ -195,9 +195,8 @@
    (h/get-req (str "subscriptions/" subscription-id))))
 
 (s/fdef fetch
-        :args (s/alt :unary (s/cat :subscription-id ::id)
-                     :binary (s/cat :subscription-id ::id
-                                    :opts h/request-options?))
+        :args (s/cat :subscription-id ::id
+                     :opts (s/? h/request-options?))
         :ret (ss/async ::subscription))
 
 
@@ -215,7 +214,7 @@
         :args (s/alt :unary (s/cat :subscription-id ::id)
                      :binary (s/cat :subscription-id ::id
                                     :params ::update-params)
-                     :ternary(s/cat :subscription-id ::id
+                     :ternary (s/cat :subscription-id ::id
                                     :params ::update-params
                                     :opts h/request-options?))
         :ret (ss/async ::subscription))
