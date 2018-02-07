@@ -110,8 +110,8 @@
       (base-card)
       (ss/stripe-object "card")))
 
-(defn card? [x]
-  (s/valid? ::card x))
+(def card?
+  (partial s/valid? ::car))
 
 (s/def ::source-map
   (-> (s/keys :req-un [::exp_month ::exp_year ::number ::cvc]
