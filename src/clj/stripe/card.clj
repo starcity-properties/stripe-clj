@@ -110,13 +110,8 @@
       (base-card)
       (ss/stripe-object "card")))
 
-<<<<<<< HEAD
 (defn card? [x]
   (s/valid? ::card x))
-=======
-(def card?
-  (partial s/valid? ::car))
->>>>>>> add subscription methods Stripe api. add schema for subscription_items.
 
 (s/def ::source-map
   (-> (s/keys :req-un [::exp_month ::exp_year ::number ::cvc]
