@@ -163,11 +163,9 @@
                  (update opts :params merge params)))))
 
 (s/fdef create!
-        :args (s/alt :binary (s/cat :customer-id ::id
-                                    :source ::source)
-                     :ternary (s/cat :customer-id ::id
-                                     :source ::source
-                                     :opts h/request-options?))
+        :args (s/cat :customer-id ::id
+                     :source ::source
+                     :opts (s/? h/request-options?))
         :ret (ss/async ::card))
 
 
@@ -179,11 +177,9 @@
    (h/get-req (format "customers/%s/sources/%s" customer-id source-id) opts)))
 
 (s/fdef fetch
-        :args (s/alt :binary (s/cat :customer-id ::id
-                                    :source-id ::id)
-                     :ternary (s/cat :customer-id ::id
-                                     :source-id ::id
-                                     :opts h/request-options?))
+        :args (s/cat :customer-id ::id
+                     :source-id ::id
+                     :opts (s/? h/request-options?))
         :ret (ss/async ::card))
 
 
@@ -196,12 +192,10 @@
                (assoc opts :params params))))
 
 (s/fdef update!
-        :args (s/alt :binary (s/cat :customer-id ::id
-                                    :card-id ::id)
-                     :ternary (s/cat :customer-id ::id
-                                     :card-id ::id
-                                     :params ::update-params
-                                     :opts h/request-options?))
+        :args (s/cat :customer-id ::id
+                     :card-id ::id
+                     :params ::update-params
+                     :opts (s/? h/request-options?))
         :ret (ss/async ::card))
 
 
@@ -213,11 +207,9 @@
    (h/delete-req (format "customers/%s/sources/%s" customer-id card-id) opts)))
 
 (s/fdef delete!
-        :args (s/alt :binary (s/cat :customer-id :id
-                                    :card-id ::id)
-                     :ternary (s/cat :customer-id ::id
-                                     :card-id ::id
-                                     :opts h/request-options?))
+        :args (s/cat :customer-id ::id
+                     :card-id ::id
+                     :opts (s/? h/request-options?))
         :ret (ss/async ss/deleted?))
 
 
@@ -253,12 +245,7 @@
   (update! test-customer "card_1BnE8LIvRccmW9nO9QaA2nfv"
            {:exp_year 2022})
 
-  (fetch test-customer "card_1BnE8LIvRccmW9nO9QaA2nfv")
-
-  (fetch-all test-customer)
-  (fetch-all test-customer {})
-
-  (delete! test-customer "card_1BnXjMIvRccmW9nOAAJqgBcT")
+  (fetch test-customer "card_1BnXjMIvRccmW9nOAAJqgBcT")
 
   (do
     (require '[clojure.spec.test.alpha :as stest])
