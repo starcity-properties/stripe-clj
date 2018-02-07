@@ -8,7 +8,8 @@
                  [http-kit "2.2.0"]
                  [cheshire "5.8.0"]
                  [starcity/toolbelt-async "0.4.0"]
-                 [starcity/toolbelt-core "0.3.0"]]
+                 [starcity/toolbelt-core "0.3.0"]
+                 [ring/ring-codec "1.1.0"]]
 
   :source-paths ["src/clj"]
 
