@@ -110,8 +110,8 @@
       (base-card)
       (ss/stripe-object "card")))
 
-(defn card? [x]
-  (s/valid? ::card x))
+(def card?
+  (partial s/valid? ::card))
 
 (s/def ::source-map
   (-> (s/keys :req-un [::exp_month ::exp_year ::number ::cvc]
@@ -224,9 +224,12 @@
               (assoc opts :params params))))
 
 (s/fdef fetch-all
-        :args (s/cat :customer-id ::id
-                     :params (s/? ::fetch-all-params)
-                     :opts (s/? h/request-options?))
+        :args (s/alt :unary (s/cat :customer-id ::id)
+                     :binary (s/cat :customer-id ::id
+                                    :params ::fetch-all-params)
+                     :ternary (s/cat :customer-id ::id
+                                     :params ::fetch-all-params
+                                     :opts h/request-options?))
         :ret (ss/async ::cards))
 
 (comment
@@ -242,12 +245,7 @@
   (update! test-customer "card_1BnE8LIvRccmW9nO9QaA2nfv"
            {:exp_year 2022})
 
-  (fetch test-customer "card_1BnE8LIvRccmW9nO9QaA2nfv")
-
-  (fetch-all test-customer)
-  (fetch-all test-customer {})
-
-  (delete! test-customer "card_1BnXjMIvRccmW9nOAAJqgBcT")
+  (fetch test-customer "card_1BnXjMIvRccmW9nOAAJqgBcT")
 
   (do
     (require '[clojure.spec.test.alpha :as stest])
