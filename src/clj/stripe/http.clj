@@ -3,9 +3,6 @@
             [clojure.core.async :as a]
             [clojure.spec.alpha :as s]
             [org.httpkit.client :as http]
-            [stripe.spec :as ss]
-            [stripe.util :as u]
-            [stripe.util.codec :as codec]
             [toolbelt.async :as ta]
             [toolbelt.core :as tb]))
 

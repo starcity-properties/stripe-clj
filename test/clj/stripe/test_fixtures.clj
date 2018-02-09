@@ -37,6 +37,7 @@
   [f]
   (h/with-token (env-token :stripe-dev-token)))
 
+
 (defn test-setup
   "Wrapper function for use with use-fixtures."
   [f]
