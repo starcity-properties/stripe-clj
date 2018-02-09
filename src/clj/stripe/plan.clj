@@ -1,7 +1,8 @@
 (ns stripe.plan
   (:require [clojure.spec.alpha :as s]
             [stripe.spec :as ss]
-            [stripe.http :as h]))
+            [stripe.http :as h]
+            [stripe.util.codec :as codec]))
 
 
 ;; ==============================================================================
@@ -109,7 +110,7 @@
   ([plan-id]
    (fetch plan-id {}))
   ([plan-id opts]
-   (h/get-req (str "plans/" (stripe.util.codec/form-encode plan-id)) opts)))
+   (h/get-req (str "plans/" (codec/form-encode plan-id)) opts)))
 
 (s/fdef fetch
         :args (s/cat :plan-id ::id
@@ -122,7 +123,7 @@
   ([plan-id params]
    (update! plan-id params {}))
   ([plan-id params opts]
-   (h/post-req (str "plans/" (stripe.util.codec/form-encode plan-id))
+   (h/post-req (str "plans/" (codec/form-encode plan-id))
                (assoc opts :params params))))
 
 (s/fdef update!
@@ -137,7 +138,7 @@
   ([plan-id]
    (delete! plan-id {}))
   ([plan-id opts]
-   (h/delete-req (str "plans/" (stripe.util.codec/form-encode plan-id)) opts)))
+   (h/delete-req (str "plans/" (codec/form-encode plan-id)) opts)))
 
 (s/fdef delete!
         :args (s/cat :plan-id ::id
