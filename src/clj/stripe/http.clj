@@ -27,7 +27,7 @@
   map?)
 
 (s/def ::method
-  #{http/post http/get http/delete})
+  #{:get :delete :post})
 
 (s/def ::out-ch
   ta/chan?)
@@ -39,7 +39,7 @@
   ::api-token)
 
 (s/def ::throw-exception?
-  ::boolean)
+  boolean?)
 
 (s/def ::account
   string?)
@@ -188,8 +188,8 @@
   [method params]
   (case method
     :get [:query-params params]
-    [:body (codec/form-encode params)]))
-
+    :delete [:query-params params]
+    :post [:form-params params]))
 
 (defn prepare-params
   "Returns a parameter map suitable for feeding in to a request to Stripe.
@@ -199,9 +199,10 @@
 
   `params` is the parameters for the stripe API calls."
   [token method params opts]
+  (println method)
   (let [[k params'] (encode-params method params)
         base-params {:basic-auth       token
-                     :throw-exceptions false
+                     :throw-exception? true
                      k                 params'}
         version     (or (:api-version opts) (api-version))
         connect     (or (:account opts) (connect-account))
@@ -209,11 +210,12 @@
     (merge base-params {:headers headers} (dissoc opts :api-version :account))))
 
 (s/fdef prepare-params
-        :args (s/cat :token ::api-token
+        :args (s/cat :token  ::api-token
                      :method ::method
                      :params ::params
-                     :opts ::http-kit-options)
+                     :opts   ::http-kit-options)
         :ret map?)
+
 
 ;; =============================================================================
 ;; Public API
@@ -232,11 +234,23 @@
   (:headers (response res)))
 
 
+;; (defn handle-response
+;;   "Tries to make a request and throws custom errors based on status
+;;   code. Returns the body of a response."
+;;   [req-fn url options]
+;;   (try+
+;;    (:body (req-fn url options))
+;;    (catch [:status 401] {:keys [body]}
+;;      (throw+ "access denied"))
+;;    (catch [:status 400] {:keys [body]}
+;;      (throw+ (get (json/parse-string body) "additional")))))
+
+
 (defn api-call
   "Call an API method on Stripe. If an output channel is supplied, the
   method will place the result in that channel; if not, returns
   synchronously."
-  [{:keys [params client-options token account method endpoint out-ch throw-exception?]
+  [{:keys [params client-options token account method endpoint out-ch]
     :or   {params         {}
            client-options {}
            account        *connect-account*
@@ -250,16 +264,59 @@
                           (assoc ::response ret))
                       {:error (:error ret)}))]
     (if-not (some? out-ch)
-      (process @(method url params'))
-      (do (method url params'
-                  (fn [ret]
-                    (a/put! out-ch (process ret))
-                    (a/close! out-ch)))
+      (process @(http/request (merge params' {:method method :url url})))
+      (do (http/request (merge params' {:method method :url url})
+                        (fn [ret]
+                          (a/put! out-ch (process ret))
+                          (a/close! out-ch)))
           out-ch))))
 
 (s/fdef api-call
         :args (s/cat :params ::api-call)
         :ret (s/or :result map? :chan ta/chan?))
+
+
+(comment
+
+  (do
+    (defn api-call2
+      [{:keys [params client-options token account method endpoint out-ch]
+        :or   {params         {}
+               client-options {}
+               account        *connect-account*
+               token          (api-token)}}]
+      (assert token "API Token must not be nil.")
+      (let [url (method-url endpoint)]
+        (->> (assoc client-options :account account)
+             (prepare-params token method params))))
+
+    (get-req "customers"
+             {:token          "sk_test_mPUtCMOnGXJwD6RAWMPou8PH"
+              :params         {:limit 1}
+              ;; :params         {:a [{:b 2}]}
+              :client-options {}})
+
+    (def test-account (get-req "account"
+              {:token          "sk_test_mPUtCMOnGXJwD6RAWMPou8PH"
+               :params         {}
+               :client-options {}}))
+
+    (def test-account-with-id (get-req (str "accounts/" "acct_18Q0bBIvRccmW9nO")
+              {:token          "sk_test_mPUtCMOnGXJwD6RAWMPou8PH"
+               :params         {}
+               :client-options {}}))
+
+    (= test-account test-account-with-id)
+
+    (post-req "customers"
+             {:token          "sk_test_mPUtCMOnGXJwD6RAWMPou8PH"
+              :params         {:limit 1}
+              ;; :params         {:a [{:b 2}]}
+              :client-options {}})
+    )
+
+  )
+
 
 
 (defmacro defapi
@@ -275,9 +332,9 @@
               :endpoint endpoint#)))))
 
 (s/fdef defapi
-        :args (s/cat :symbol symbol? :method symbol?)
+        :args (s/cat :symbol symbol? :method keyword?)
         :ret list?)
 
-(defapi post-req http/post)
-(defapi get-req http/get)
-(defapi delete-req http/delete)
+(defapi post-req :post)
+(defapi get-req :get)
+(defapi delete-req :delete)
