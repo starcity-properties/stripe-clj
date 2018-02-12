@@ -35,14 +35,14 @@
 (s/def ::token
   ::api-token)
 
-(s/def ::throw-exception?
+(s/def ::throw-on-error?
   boolean?)
 
 (s/def ::account
   string?)
 
 (s/def ::request-options
-  (s/keys :opt-un [::account ::out-ch ::params ::client-options ::token ::throw-exception?]))
+  (s/keys :opt-un [::account ::out-ch ::params ::client-options ::token ::throw-on-error?]))
 
 (s/def ::endpoint
   string?)
@@ -196,11 +196,9 @@
 
   `params` is the parameters for the stripe API calls."
   [token method params opts]
-  (println method)
   (let [[k params'] (encode-params method params)
-        base-params {:basic-auth       token
-                     :throw-exception? true
-                     k                 params'}
+        base-params {:basic-auth token
+                     k           params'}
         version     (or (:api-version opts) (api-version))
         connect     (or (:account opts) (connect-account))
         headers     (tb/assoc-when {} "Stripe-Version" version "Stripe-Account" connect)]
@@ -231,89 +229,58 @@
   (:headers (response res)))
 
 
-;; (defn handle-response
-;;   "Tries to make a request and throws custom errors based on status
-;;   code. Returns the body of a response."
-;;   [req-fn url options]
-;;   (try+
-;;    (:body (req-fn url options))
-;;    (catch [:status 401] {:keys [body]}
-;;      (throw+ "access denied"))
-;;    (catch [:status 400] {:keys [body]}
-;;      (throw+ (get (json/parse-string body) "additional")))))
+(defn- process
+  [response]
+  (or (-> (json/parse-string (:body response) keyword)
+          (assoc ::response response))
+      {:error (:error response)}))
+
+
+(defn- respond-sync
+  [params {:keys [throw-on-error?] :or {throw-on-error? true}}]
+  (let [response                @(http/request params)
+        {:keys [error] :as res} (process response)]
+    (println throw-on-error? error)
+    (if (and throw-on-error? (some? error))
+      (throw (ex-info (get-in res [:error :message]) res))
+      res)))
+
+
+(defn- respond-async
+  [params {:keys [out-ch throw-on-error?] :or {throw-on-error? true}}]
+  (http/request params
+                (fn [res]
+                  (let [{:keys [error] :as res} (process res)]
+                    (->> (if (and throw-on-error? (some? error))
+                           (ex-info (get-in res [:error :message]) res)
+                           res)
+                         (a/put! out-ch)))
+                  (a/close! out-ch))))
 
 
 (defn api-call
   "Call an API method on Stripe. If an output channel is supplied, the
   method will place the result in that channel; if not, returns
   synchronously."
-  [{:keys [params client-options token account method endpoint out-ch]
+  [{:keys [params client-options token account method endpoint out-ch throw-on-error?]
     :or   {params         {}
            client-options {}
            account        *connect-account*
-           token          (api-token)}}]
+           token          (api-token)}
+    :as   opts}]
   (assert token "API Token must not be nil.")
   (let [url     (method-url endpoint)
         params' (->> (assoc client-options :account account)
-                     (prepare-params token method params))
-        process (fn [ret]
-                  (or (-> (json/parse-string (:body ret) keyword)
-                          (assoc ::response ret))
-                      {:error (:error ret)}))]
+                     (prepare-params token method params)
+                     (merge {:method method :url url}))]
     (if-not (some? out-ch)
-      (process @(http/request (merge params' {:method method :url url})))
-      (do (http/request (merge params' {:method method :url url})
-                        (fn [ret]
-                          (a/put! out-ch (process ret))
-                          (a/close! out-ch)))
+      (respond-sync params' opts)
+      (do (respond-async params' opts)
           out-ch))))
 
 (s/fdef api-call
         :args (s/cat :params ::api-call)
         :ret (s/or :result map? :chan ta/chan?))
-
-
-(comment
-
-  (do
-    (defn api-call2
-      [{:keys [params client-options token account method endpoint out-ch]
-        :or   {params         {}
-               client-options {}
-               account        *connect-account*
-               token          (api-token)}}]
-      (assert token "API Token must not be nil.")
-      (let [url (method-url endpoint)]
-        (->> (assoc client-options :account account)
-             (prepare-params token method params))))
-
-    (get-req "customers"
-             {:token          "sk_test_mPUtCMOnGXJwD6RAWMPou8PH"
-              :params         {:limit 1}
-              ;; :params         {:a [{:b 2}]}
-              :client-options {}})
-
-    (def test-account (get-req "account"
-              {:token          "sk_test_mPUtCMOnGXJwD6RAWMPou8PH"
-               :params         {}
-               :client-options {}}))
-
-    (def test-account-with-id (get-req (str "accounts/" "acct_18Q0bBIvRccmW9nO")
-              {:token          "sk_test_mPUtCMOnGXJwD6RAWMPou8PH"
-               :params         {}
-               :client-options {}}))
-
-    (= test-account test-account-with-id)
-
-    (post-req "customers"
-             {:token          "sk_test_mPUtCMOnGXJwD6RAWMPou8PH"
-              :params         {:limit 1}
-              ;; :params         {:a [{:b 2}]}
-              :client-options {}})
-    )
-
-  )
-
 
 
 (defmacro defapi
@@ -331,6 +298,7 @@
 (s/fdef defapi
         :args (s/cat :symbol symbol? :method keyword?)
         :ret list?)
+
 
 (defapi post-req :post)
 (defapi get-req :get)
