@@ -3,9 +3,6 @@
             [clojure.core.async :as a]
             [clojure.spec.alpha :as s]
             [org.httpkit.client :as http]
-            [stripe.spec :as ss]
-            [stripe.util :as u]
-            [stripe.util.codec :as codec]
             [toolbelt.async :as ta]
             [toolbelt.core :as tb]))
 
@@ -27,7 +24,7 @@
   map?)
 
 (s/def ::method
-  #{http/post http/get http/delete})
+  #{:get :delete :post})
 
 (s/def ::out-ch
   ta/chan?)
@@ -38,11 +35,14 @@
 (s/def ::token
   ::api-token)
 
+(s/def ::throw-on-error?
+  boolean?)
+
 (s/def ::account
   string?)
 
 (s/def ::request-options
-  (s/keys :opt-un [::account ::out-ch ::params ::client-options ::token]))
+  (s/keys :opt-un [::account ::out-ch ::params ::client-options ::token ::throw-on-error?]))
 
 (s/def ::endpoint
   string?)
@@ -88,7 +88,7 @@
      ~@forms))
 
 (s/fdef with-token
-        :args (s/cat :token ::api-token
+        :args (s/cat :token (s/or :symbol symbol? :token ::api-token)
                      :forms (s/* list?))
         :ret list?)
 
@@ -96,8 +96,8 @@
 (defn use-token!
   "Permanently sets a base token. The token can still be overridden on
   a per-thread basis using with-token."
-  [s]
-  (alter-var-root #'*token* (constantly s)))
+  [t]
+  (alter-var-root #'*token* (constantly t)))
 
 
 ;; =====================================
@@ -107,6 +107,7 @@
 (defn api-version [] *api-version*)
 
 (s/fdef api-version
+        :args (s/cat)
         :ret (s/nilable string?))
 
 
@@ -161,34 +162,31 @@
 ;; =============================================================================
 
 
-(def ^:dynamic url "https://api.stripe.com/v1/")
+(def ^:dynamic *url* "https://api.stripe.com/v1/")
+
+
+(defmacro with-base-url
+  [u & forms]
+  `(binding [*url* ~u]
+     ~@forms))
 
 
 (defn method-url
   "URL for calling a method."
   [method]
-  (str url method))
+  (str *url* method))
 
 (s/fdef method-url
         :args (s/cat :method string?)
         :ret string?)
 
 
-(defn prepare-expansion
-  [expand]
-  (map name (u/collectify expand)))
-
-(s/fdef prepare-expansion
-        :args (s/cat :expand ::expansion)
-        :ret (s/+ string?))
-
-
 (defn- encode-params
   [method params]
   (case method
     :get [:query-params params]
-    [:body (codec/form-encode params)]))
-
+    :delete [:query-params params]
+    :post [:form-params params]))
 
 (defn prepare-params
   "Returns a parameter map suitable for feeding in to a request to Stripe.
@@ -198,53 +196,86 @@
 
   `params` is the parameters for the stripe API calls."
   [token method params opts]
-  (let [params      (if-let [expand (:expand params)]
-                      (-> (dissoc params :expand)
-                          (assoc "expand[]" (prepare-expansion expand)))
-                      params)
-        [k params'] (encode-params method params)
-        base-params {:basic-auth       token
-                     :throw-exceptions false
-                     k                 params'}
+  (let [[k params'] (encode-params method params)
+        base-params {:basic-auth token
+                     k           params'}
         version     (or (:api-version opts) (api-version))
         connect     (or (:account opts) (connect-account))
         headers     (tb/assoc-when {} "Stripe-Version" version "Stripe-Account" connect)]
     (merge base-params {:headers headers} (dissoc opts :api-version :account))))
 
 (s/fdef prepare-params
-        :args (s/cat :token ::api-token
+        :args (s/cat :token  ::api-token
                      :method ::method
                      :params ::params
-                     :opts ::http-kit-options)
+                     :opts   ::http-kit-options)
         :ret map?)
+
 
 ;; =============================================================================
 ;; Public API
 ;; =============================================================================
 
 
+(defn response [res]
+  (get res ::response))
+
+
+(defn status [res]
+  (:status (response res)))
+
+
+(defn headers [res]
+  (:headers (response res)))
+
+
+(defn- process
+  [response]
+  (or (-> (json/parse-string (:body response) keyword)
+          (assoc ::response response))
+      {:error (:error response)}))
+
+
+(defn- respond-sync
+  [params {:keys [throw-on-error?] :or {throw-on-error? true}}]
+  (let [response                @(http/request params)
+        {:keys [error] :as res} (process response)]
+    (println throw-on-error? error)
+    (if (and throw-on-error? (some? error))
+      (throw (ex-info (get-in res [:error :message]) res))
+      res)))
+
+
+(defn- respond-async
+  [params {:keys [out-ch throw-on-error?] :or {throw-on-error? true}}]
+  (http/request params
+                (fn [res]
+                  (let [{:keys [error] :as res} (process res)]
+                    (->> (if (and throw-on-error? (some? error))
+                           (ex-info (get-in res [:error :message]) res)
+                           res)
+                         (a/put! out-ch)))
+                  (a/close! out-ch))))
+
+
 (defn api-call
   "Call an API method on Stripe. If an output channel is supplied, the
   method will place the result in that channel; if not, returns
   synchronously."
-  [{:keys [params client-options token account method endpoint out-ch]
+  [{:keys [params client-options token account method endpoint out-ch throw-on-error?]
     :or   {params         {}
            client-options {}
            account        *connect-account*
-           token          (api-token)}}]
+           token          (api-token)}
+    :as   opts}]
   (assert token "API Token must not be nil.")
   (let [url     (method-url endpoint)
         params' (->> (assoc client-options :account account)
-                     (prepare-params token method params))
-        process (fn [ret]
-                  (or (json/parse-string (:body ret) keyword)
-                      {:error (:error ret)}))]
+                     (prepare-params token method params)
+                     (merge {:method method :url url}))]
     (if-not (some? out-ch)
-      (process @(method url params'))
-      (do (method url params'
-                  (fn [ret]
-                    (a/put! out-ch (process ret))
-                    (a/close! out-ch)))
+      (respond-sync params' opts)
+      (do (respond-async params' opts)
           out-ch))))
 
 (s/fdef api-call
@@ -265,9 +296,10 @@
               :endpoint endpoint#)))))
 
 (s/fdef defapi
-        :args (s/cat :symbol symbol? :method symbol?)
+        :args (s/cat :symbol symbol? :method keyword?)
         :ret list?)
 
-(defapi post-req http/post)
-(defapi get-req http/get)
-(defapi delete-req http/delete)
+
+(defapi post-req :post)
+(defapi get-req :get)
+(defapi delete-req :delete)

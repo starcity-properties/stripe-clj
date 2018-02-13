@@ -5,8 +5,10 @@
             :url  "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.9.0"]
                  [org.clojure/core.async "0.4.474"]
+                 [environ/environ.core "0.3.1"]
                  [http-kit "2.2.0"]
                  [cheshire "5.8.0"]
+                 [ring/ring-codec "1.1.0"]
                  [starcity/toolbelt-async "0.4.0"]
                  [starcity/toolbelt-core "0.3.0"]
                  [ring/ring-codec "1.1.0"]]
@@ -15,4 +17,6 @@
 
   :repl-options {:init-ns user}
 
-  :profiles {:dev {:source-paths ["src/clj" "test/clj" "env/dev"]}})
+  :profiles {:dev {:source-paths ["src/clj" "test/clj" "env/dev"]
+                   :dependencies [[org.clojure/test.check "0.10.0-alpha2"]
+                                  [se.haleby/stub-http "0.2.4"]]}})
