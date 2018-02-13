@@ -231,7 +231,7 @@
    (add-source! customer-id source {}))
   ([customer-id source opts]
    (h/post-req (format "customers/%s/sources" customer-id)
-               (assoc opts :params {:source (s/conform ::source-type source)}))))
+               (assoc opts :params {:source source}))))
 
 (s/fdef add-source!
         :args (s/cat :customer-id ::customer-id
@@ -432,4 +432,4 @@
 
   (add-source! "cus_BzZW6T3NzySJ5E" "test")
 
-)
+  )
