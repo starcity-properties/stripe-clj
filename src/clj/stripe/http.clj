@@ -88,7 +88,7 @@
      ~@forms))
 
 (s/fdef with-token
-        :args (s/cat :token (s/or :symbol symbol? :token ::api-token)
+        :args (s/cat :token any?
                      :forms (s/* list?))
         :ret list?)
 
@@ -240,7 +240,6 @@
   [params {:keys [throw-on-error?] :or {throw-on-error? true}}]
   (let [response                @(http/request params)
         {:keys [error] :as res} (process response)]
-    (println throw-on-error? error)
     (if (and throw-on-error? (some? error))
       (throw (ex-info (get-in res [:error :message]) res))
       res)))
