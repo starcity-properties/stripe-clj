@@ -17,7 +17,9 @@
 
 (def test-bank
   {:routing_number "110000000"
-   :account_number "000123456789"})
+   :account_number "000123456789"
+   :currency "usd"
+   :country "US"})
 
 (def customer-data
   {:description "Davey boy!"
