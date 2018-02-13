@@ -2,7 +2,7 @@
   (:require [clojure.spec.alpha :as s]
             [stripe.spec :as ss]
             [stripe.http :as h]
-            [stripe.util.codec :as codec]))
+            [clojure.core.async :as a]))
 
 
 ;; ==============================================================================
@@ -47,6 +47,9 @@
       (ss/metadata)
       (ss/stripe-object "plan")))
 
+(def plan?
+  (partial s/valid? ::plan))
+
 ;; create-params ========================
 
 (s/def ::create-params
@@ -73,7 +76,7 @@
   (-> (s/keys :opt-un [::ending_before ::limit ::starting_after])))
 
 (s/def ::plans
-  (ss/sublist :plan))
+  (ss/sublist ::plan))
 
 (def plans?
   (partial s/valid? ::plans))
@@ -86,7 +89,7 @@
 (defn create!
   "Create a plan."
   ([name interval amount]
-   (create! name interval amount {}))
+   (create! name interval amount {} {}))
   ([name interval amount params]
    (create! name interval amount params {}))
   ([name interval amount params opts]
@@ -97,11 +100,18 @@
      (h/post-req "plans" (assoc opts :params params')))))
 
 (s/fdef create!
-        :args (s/cat :name ::name
-                     :interval ::interval
-                     :amount ::amount
-                     :params (s/? ::create-params)
-                     :opts (s/? h/request-options?))
+        :args (s/alt :ternary (s/cat :name ::name
+                                     :interval ::interval
+                                     :amount ::amount)
+                     :quaternary (s/cat :name ::name
+                                        :interval ::interval
+                                        :amount ::amount
+                                        :params ::create-params)
+                     :quinary (s/cat :name ::name
+                                     :interval ::interval
+                                     :amount ::amount
+                                     :params ::create-params
+                                     :opts h/request-options?))
         :ret (ss/async ::plan))
 
 
@@ -110,7 +120,7 @@
   ([plan-id]
    (fetch plan-id {}))
   ([plan-id opts]
-   (h/get-req (str "plans/" (codec/form-encode plan-id)) opts)))
+   (h/get-req (str "plans/" plan-id) opts)))
 
 (s/fdef fetch
         :args (s/cat :plan-id ::id
@@ -123,7 +133,7 @@
   ([plan-id params]
    (update! plan-id params {}))
   ([plan-id params opts]
-   (h/post-req (str "plans/" (codec/form-encode plan-id))
+   (h/post-req (str "plans/" plan-id)
                (assoc opts :params params))))
 
 (s/fdef update!
@@ -138,7 +148,7 @@
   ([plan-id]
    (delete! plan-id {}))
   ([plan-id opts]
-   (h/delete-req (str "plans/" (codec/form-encode plan-id)) opts)))
+   (h/delete-req (str "plans/" plan-id) opts)))
 
 (s/fdef delete!
         :args (s/cat :plan-id ::id
@@ -153,12 +163,13 @@
   ([params]
    (fetch-all params {}))
   ([params opts]
-   (h/get-req (str "plans")
-              (assoc opts :params params))))
+   (h/get-req "plans" (assoc opts :params params))))
 
 (s/fdef fetch-all
-        :args (s/cat :params (s/? ::fetch-all-params)
-                     :opts (s/? h/request-options?))
+        :args (s/alt :nullary (s/cat)
+                     :unary (s/cat :params ::fetch-all-params)
+                     :binary (s/cat :params ::fetch-all-params
+                                     :opts h/request-options?))
         :ret (ss/async ::plans))
 
 

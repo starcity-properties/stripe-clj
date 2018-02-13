@@ -20,9 +20,6 @@
      []
      m)))
 
-(defn- parameterize [[p & ps]]
-  (apply str (name p) (map #(str "[" (name %) "]") ps)))
-
 (defprotocol ^:no-doc FormEncodeable
   (form-encode* [this encoding]))
 
@@ -32,32 +29,54 @@
     (URLEncoder/encode unencoded encoding))
   Map
   (form-encode* [params encoding]
-    (letfn [(encode [x]
+    (letfn [(flatten-keys [ps]
+              (map #(str "[" (encode (name %)) "]") ps))
+            (parameterize [[p & ps]]
+              (apply str (encode (name p)) (flatten-keys ps)))
+            (parameterize-index [[p & ps] index]
+              (apply str (encode (name p)) "[" index "]" (flatten-keys ps)))
+            (encode [x]
               (form-encode* x encoding))
-            (encode-array-param [[k v]]
-              (str (encode (name k)) "[]=" (encode v)))
+            (encode-array-param [index k v]
+              (if (map? v)
+                (let [params (->> (flatten-map v) (map (partial cons k)))]
+                  (->> params
+                       (map
+                        (fn [param]
+                          (let [value (encode (last param))
+                                name  (parameterize-index (butlast param) index)]
+                            (if (nil? value)
+                              (str name "=")
+                              (str name "=" value)))))
+                       (str/join "&")))
+                (str (encode (name k)) "[]=" (encode v))))
             (encode-map-params [[k v]]
               (let [params (->> (flatten-map v) (map (partial cons k)))]
                 (map (fn [param]
-                       (let [value (last param)
+                       (let [value (encode (last param))
                              name  (parameterize (butlast param))]
-                         (if (sequential? value)
-                           (str name "[]=" value)
-                           (str name "=" value))))
+                         (cond
+                           (nil? value)        (str name "=")
+                           (sequential? value) (str name "[]=" value)
+                           :otherwise          (str name "=" value))))
                      params)))
             (encode-param [[k v]]
-              (str (encode (name k)) "=" (encode v)))]
+              (if (nil? v)
+                (str (encode (name k)) "=")
+                (str (encode (name k)) "=" (encode v))))]
       (->> params
            (mapcat
             (fn [[k v]]
               (cond
-                (or (seq? v) (sequential? v)) (map #(encode-array-param [k %]) v)
+                (or (set? v) (sequential? v)) (map-indexed #(encode-array-param %1 k %2) v)
                 (map? v)                      (encode-map-params [k v])
                 :otherwise                    [(encode-param [k v])])))
            (str/join "&"))))
   Object
   (form-encode* [x encoding]
-    (form-encode* (str x) encoding)))
+    (form-encode* (str x) encoding))
+  nil
+  (form-encode* [x encoding] ""))
 
 (defn form-encode
   "Encode the supplied value into www-form-urlencoded format, often used in
