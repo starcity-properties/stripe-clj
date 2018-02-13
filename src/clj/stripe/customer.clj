@@ -65,6 +65,8 @@
   (-> (s/keys :opt-un [::limit ::created ::email ::starting_after ::ending_before])
       (ss/metadata)))
 
+(def create-customer-params?
+  (partial s/valid? ::customer-req))
 
 ;; sources ======================================================================
 
@@ -154,6 +156,8 @@
 (s/def ::source
   (s/multi-spec source-type :object))
 
+(s/def ::source-type
+  (s/or :source ::source :source-id ::source-id))
 
 ;; bank source request ==========================================================
 
@@ -223,15 +227,15 @@
 
 (defn add-source!
   "Add a source to a customer given the customer and source ids."
-  ([customer-id source-id]
-   (add-source! customer-id source-id {}))
-  ([customer-id source-id opts]
+  ([customer-id source]
+   (add-source! customer-id source {}))
+  ([customer-id source opts]
    (h/post-req (format "customers/%s/sources" customer-id)
-               (assoc opts :params {:source source-id}))))
+               (assoc opts :params {:source (s/conform ::source-type source)}))))
 
 (s/fdef add-source!
         :args (s/cat :customer-id ::customer-id
-                     :source-id ::source-id
+                     :source ::source-type
                      :opts (s/? h/request-options?))
         :ret (ss/async ::source))
 
@@ -396,6 +400,10 @@
 
   (h/use-token! nil)
 
+  (do
+    (require '[clojure.spec.test.alpha :as stest])
+    (stest/instrument))
+
   ;; asynchronous
   (let [c (clojure.core.async/chan)]
     (create! {:out-ch c} {:customer    "cus_BzZW6T3NzySJ5E"
@@ -421,5 +429,7 @@
   (create! {:customer    "cus_BzZW6T3NzySJ5E"
             :description "Test create customer"}
            {:token (config/stripe-private-key config)})
+
+  (add-source! "cus_BzZW6T3NzySJ5E" "test")
 
 )
