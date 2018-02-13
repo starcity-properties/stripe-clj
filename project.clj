@@ -10,13 +10,11 @@
                  [cheshire "5.8.0"]
                  [ring/ring-codec "1.1.0"]
                  [starcity/toolbelt-async "0.4.0"]
-                 [starcity/toolbelt-core "0.3.0"]
-                 [ring/ring-codec "1.1.0"]]
+                 [starcity/toolbelt-core "0.3.0"]]
 
   :source-paths ["src/clj"]
 
   :repl-options {:init-ns user}
 
-  :profiles {:dev {:source-paths ["src/clj" "test/clj" "env/dev"]
-                   :dependencies [[org.clojure/test.check "0.10.0-alpha2"]
-                                  [se.haleby/stub-http "0.2.4"]]}})
+  :profiles {:test {:dependencies [[org.clojure/test.check "0.10.0-alpha2"]
+                                   [se.haleby/stub-http "0.2.4"]]}})
