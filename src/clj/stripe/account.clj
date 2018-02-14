@@ -117,9 +117,16 @@
 ;; create-params ============================================================
 
 
+
 (s/def ::create-params
   (-> (s/keys :req-un [::type ::email]
-              :opt-un [::country])
+              :opt-un [::country ::business_logo ::business_name
+                       ::business_primary_color ::business_url
+                       ::debit_negative_balances ::decline_charge_on
+                       ::external_account ::legal_entity ::payout_schedule
+                       ::payout_statement_descriptor ::product_description
+                       ::statement_descriptor ::support_email ::support_phone
+                       ::support_url ::tos_acceptance])
       (ss/metadata)))
 
 
@@ -189,7 +196,7 @@
    (create! type email params {}))
   ([type email {:keys [country] :or {country "US"} :as params} opts]
    (let [params (assoc params :country country :type type :email email)]
-   (h/post-req "accounts" (assoc opts :params params)))))
+     (h/post-req "accounts" (assoc opts :params params)))))
 
 (s/fdef create!
         :args (s/alt :binary (s/cat :type ::type
@@ -316,4 +323,12 @@
         :ret (ss/async ::account))
 
 
-(comment)
+(comment
+
+  (h/use-token! "sk_test_mPUtCMOnGXJwD6RAWMPou8PH")
+
+  (do
+    (require '[clojure.spec.test.alpha :as stest])
+    (stest/instrument))
+
+  )
