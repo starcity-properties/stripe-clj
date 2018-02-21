@@ -87,11 +87,6 @@
   `(binding [*token* ~t]
      ~@forms))
 
-(s/fdef with-token
-        :args (s/cat :token any?
-                     :forms (s/* list?))
-        :ret list?)
-
 
 (defn use-token!
   "Permanently sets a base token. The token can still be overridden on
@@ -116,11 +111,6 @@
   `(binding [*api-version* ~v]
      ~@forms))
 
-(s/fdef with-api-version
-        :args (s/cat :version string?
-                     :forms (s/* list?))
-        :ret list?)
-
 
 (defn use-api-version!
   "Permanently sets an API version. The api version can still be
@@ -143,11 +133,6 @@
   [v & forms]
   `(binding [*connect-account* ~v]
      ~@forms))
-
-(s/fdef with-connect-account
-        :args (s/cat :version string?
-                     :forms (s/* list?))
-        :ret list?)
 
 
 (defn use-connect-account!
