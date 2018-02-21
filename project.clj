@@ -1,4 +1,4 @@
-(defproject starcity/stripe-clj "0.1.0-SNAPSHOT"
+(defproject starcity/stripe-clj "0.1.0"
   :description "Stripe bindings for Clojure."
   :url "https://github.com/starcity-properties/stripe-clj"
   :license {:name "Eclipse Public License"
