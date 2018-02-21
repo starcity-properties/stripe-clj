@@ -16,5 +16,8 @@
 
   :repl-options {:init-ns user}
 
+  :deploy-repositories [["releases" {:url   "https://clojars.org/repo"
+                                     :creds :gpg}]]
+
   :profiles {:test {:dependencies [[org.clojure/test.check "0.10.0-alpha2"]
                                    [se.haleby/stub-http "0.2.4"]]}})
