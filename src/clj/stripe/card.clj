@@ -202,7 +202,7 @@
 (defn delete!
   "Deletes a card from a customer or recipient"
   ([customer-id card-id]
-   (delete! customer-id card-id  {}))
+   (delete! customer-id card-id {}))
   ([customer-id card-id opts]
    (h/delete-req (format "customers/%s/sources/%s" customer-id card-id) opts)))
 
