@@ -137,7 +137,7 @@
 (s/fdef fetch
         :args (s/cat :customer-id ::customer
                      :bank-account-id ::id
-                     :opts h/request-options?)
+                     :opts (s/? h/request-options?))
         :ret (ss/async ::bank-account))
 
 
