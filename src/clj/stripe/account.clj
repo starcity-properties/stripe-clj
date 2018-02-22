@@ -119,8 +119,7 @@
 
 
 (s/def ::create-params
-  (-> (s/keys :req-un [::type ::email]
-              :opt-un [::country ::business_logo ::business_name
+  (-> (s/keys :opt-un [::country ::business_logo ::business_name
                        ::business_primary_color ::business_url
                        ::debit_negative_balances ::decline_charge_on
                        ::external_account ::legal_entity ::payout_schedule
