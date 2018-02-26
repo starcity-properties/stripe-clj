@@ -87,7 +87,7 @@
 
 
 (defn source? [x]
-  (s/valid? (s/or :card ::card :bank-account ::bank-account)))
+  (s/valid? (s/or :card ::card :bank-account ::bank-account) x))
 
 
 ;; ==============================================================================
