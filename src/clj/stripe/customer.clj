@@ -362,7 +362,7 @@
 (defn delete-source!
   "Deletes the source from this customer."
   ([customer-id source-id]
-   (delete-source! customer-id source-id))
+   (delete-source! customer-id source-id {}))
   ([customer-id source-id opts]
    (h/delete-req (format "customers/%s/sources/%s" customer-id source-id) opts)))
 
