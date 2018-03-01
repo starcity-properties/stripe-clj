@@ -159,10 +159,11 @@
 (s/def ::input-source
   (s/or :source-id ::source-id :map map?))
 
+
 ;; bank source request ==========================================================
 
 
-(s/def ::bank-source-req
+(s/def ::update-bank-source-req
   (ss/metadata
    (s/keys :opt-un [::account_holder_name ::account_holder_type])))
 
@@ -180,7 +181,7 @@
 ;; card source request ==========================================================
 
 
-(s/def ::card-source-req
+(s/def ::update-card-source-req
   (ss/metadata
    (s/keys :opt-un [::address_city ::address_country ::address_line1 ::address_line2
                     ::address_state ::address_zip ::exp_month ::exp_year ::name])))
@@ -306,7 +307,7 @@
 (s/fdef update-bank-source!
         :args (s/cat :customer-id ::customer-id
                      :source-id ::source-id
-                     :params ::bank-source-req
+                     :params ::update-bank-source-req
                      :opts (s/? h/request-options?))
         :ret (ss/async ::source))
 
@@ -338,7 +339,7 @@
 (s/fdef update-card-source!
         :args (s/cat :customer-id ::customer-id
                      :source-id ::source-id
-                     :params ::card-source-req
+                     :params ::update-card-source-req
                      :opts (s/? h/request-options?))
         :ret (ss/async ::source))
 
