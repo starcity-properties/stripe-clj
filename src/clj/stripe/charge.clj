@@ -67,10 +67,13 @@
 (s/def ::description
   (s/nilable string?))
 
+(s/def ::status
+  #{"succeeded" "pending" "failed"})
+
 (s/def ::charge
   (-> (s/keys :req-un [::id ::amount ::amount_refunded ::application ::application_fee
                        ::balance_transaction ::captured ::created ::currency ::customer
-                       ::description
+                       ::description ::status
                        ;; ::destination ::dispute ::failure_code ::failure_message
                        ;; ::fraud_details ::invoice ::livemode ::on_behalf_of ::order ::outcome
                        ;; ::paid
@@ -102,7 +105,7 @@
   ss/currency?)
 
 (s/def ::source
-  token/source?)
+  (s/or :token token/source? :string string? :map map?))
 
 (s/def ::customer
   customer/customer-id?)
