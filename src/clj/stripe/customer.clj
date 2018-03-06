@@ -156,8 +156,8 @@
 (s/def ::source
   (s/multi-spec source-type :object))
 
-(s/def ::source-type
-  (s/or :source ::source :source-id ::source-id))
+(s/def ::input-source
+  (s/or :source-id ::source-id :map map?))
 
 ;; bank source request ==========================================================
 
@@ -235,7 +235,7 @@
 
 (s/fdef add-source!
         :args (s/cat :customer-id ::customer-id
-                     :source ::source-type
+                     :source ::input-source
                      :opts (s/? h/request-options?))
         :ret (ss/async ::source))
 
