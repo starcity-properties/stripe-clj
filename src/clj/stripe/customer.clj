@@ -157,7 +157,7 @@
   (s/multi-spec source-type :object))
 
 (s/def ::source-type
-  (s/or :source ::source :source-id ::source-id))
+  (s/or :source-id ::source-id :source ::source))
 
 ;; bank source request ==========================================================
 
