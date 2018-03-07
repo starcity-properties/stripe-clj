@@ -41,7 +41,7 @@
   (s/nilable string?))
 
 (s/def ::application_fee
-  (s/nilable ::amount_refunded))
+  (s/or :pos-int pos-int? :zero zero?))
 
 (s/def ::balance_transaction
   (s/nilable string?))
