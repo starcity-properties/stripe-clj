@@ -93,8 +93,8 @@
    (create! charge-id {} {}))
   ([charge-id params]
    (create! charge-id params {}))
-  ([charge-id {:keys [currency] :or {currency "usd"} :as params} opts]
-   (let [params' (assoc params :currency currency :charge charge-id)]
+  ([charge-id params opts]
+   (let [params' (assoc params :charge charge-id)]
      (h/post-req "refunds" (assoc opts :params params')))))
 
 (s/fdef create!
