@@ -190,7 +190,7 @@
 
 
 (s/def ::created
-  ss/unix-timestamp?)
+  ss/timestamp-query?)
 
 (s/def ::sources
   (ss/sublist (s/* ::source)))
@@ -347,7 +347,7 @@
 
 
 (defn delete!
-  "Deletes the supplied customer."
+  "Delete the supplied customer."
   ([customer-id]
    (delete! customer-id {}))
   ([customer-id opts]

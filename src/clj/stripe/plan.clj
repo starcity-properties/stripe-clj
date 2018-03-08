@@ -17,7 +17,7 @@
   (s/or :positive pos-int? :zero zero?))
 
 (s/def ::created
-  ss/unix-timestamp?)
+  ss/timestamp-query?)
 
 (s/def ::currency
   ss/currency?)
