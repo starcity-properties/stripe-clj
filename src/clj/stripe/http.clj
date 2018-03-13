@@ -3,6 +3,7 @@
             [clojure.core.async :as a]
             [clojure.spec.alpha :as s]
             [org.httpkit.client :as http]
+            [stripe.util.codec :as codec]
             [toolbelt.async :as ta]
             [toolbelt.core :as tb]))
 
@@ -169,9 +170,10 @@
 (defn- encode-params
   [method params]
   (case method
-    :get [:query-params params]
+    :get    [:query-params params]
     :delete [:query-params params]
-    :post [:form-params params]))
+    :post   [:body (codec/form-encode params)]))
+
 
 (defn prepare-params
   "Returns a parameter map suitable for feeding in to a request to Stripe.
