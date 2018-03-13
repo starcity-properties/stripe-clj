@@ -302,15 +302,13 @@
 
   ;; asynchronous
   (let [c (clojure.core.async/chan)]
-    (create! {:out-ch c} {:customer    "cus_BzZW6T3NzySJ5E"
-                          :amount      500
+    (create! 500 {:out-ch c} {:customer    "cus_BzZW6T3NzySJ5E"
                           :description "Test platform charge"})
     c)
 
 
   (defn random-function []
-    (create! {:customer    "cus_BzZW6T3NzySJ5E"
-              :amount      500
+    (create! 800 {:customer    "cus_BzZW6T3NzySJ5E"
               :description "Test platform charge"}))
 
   ;; synchronous
@@ -321,8 +319,7 @@
 
 
   (h/with-connect-account "acct_191838JDow24Tc1a"
-    (create! {:customer    "cus_BU7S7e46Y0wed9"
-              :amount      500
+    (create! 700 {:customer    "cus_BU7S7e46Y0wed9"
               :description "Test connect charge"}))
 
   (h/with-connect-account "acct_191838JDow24Tc1a"

@@ -385,4 +385,9 @@
 
 (comment
 
+  (def customer-id "cus_CRqNmHQvhY7clE")
+
+  (create! customer-id)
+
+
 )
