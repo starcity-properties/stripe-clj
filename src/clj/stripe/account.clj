@@ -4,8 +4,9 @@
             [stripe.bank :as b]
             [stripe.card :as c]
             [stripe.http :as h]
-            [toolbelt.async :as ta]
-            [stripe.spec :as ss]))
+            [stripe.spec :as ss]
+            [toolbelt.spec :as ts]))
+
 
 ;; =============================================================================
 ;; spec ========================================================================
@@ -31,7 +32,7 @@
   ss/country?)
 
 (s/def ::created
-  ss/unix-timestamp?)
+  ts/unix-timestamp?)
 
 (s/def ::debit_negative_balances
   boolean?)
@@ -115,7 +116,6 @@
 
 
 ;; create-params ============================================================
-
 
 
 (s/def ::create-params
@@ -207,7 +207,7 @@
                                         :email ::email
                                         :params ::create-params
                                         :opts h/request-options?))
-        :ret (ss/async ::account))
+        :ret (ts/async ::account))
 
 
 (defn fetch
@@ -220,7 +220,7 @@
 (s/fdef fetch
         :args (s/cat :account-id ::id
                      :opts (s/? h/request-options?))
-        :ret (ss/async ::account))
+        :ret (ts/async ::account))
 
 
 (defn fetch-external-account
@@ -234,7 +234,7 @@
         :args (s/cat :account-id ::id
                      :external-account-id ::id
                      :opts (s/? h/request-options?))
-        :ret (ss/async ::external-account))
+        :ret (ts/async ::external-account))
 
 
 (defn fetch-all
@@ -251,7 +251,7 @@
                      :unary (s/cat :params ::fetch-all-params)
                      :binary (s/cat :params ::fetch-all-params
                                     :opts h/request-options?))
-        :ret (ss/async ::accounts))
+        :ret (ts/async ::accounts))
 
 
 (defn fetch-all-external-accounts
@@ -270,7 +270,7 @@
                      :ternary (s/cat :account-id ::id
                                      :params ::fetch-all-params
                                      :opts h/request-options?))
-        :ret (ss/async ::external_accounts))
+        :ret (ts/async ::external_accounts))
 
 
 (defn update!
@@ -289,7 +289,7 @@
                      :ternary (s/cat :account-id ::id
                                      :params ::update-params
                                      :opts h/request-options?))
-        :ret (ss/async ::account))
+        :ret (ts/async ::account))
 
 
 (defn delete!
@@ -303,7 +303,7 @@
 (s/fdef delete!
         :args (s/cat :account-id ::id
                      :opts (s/? h/request-options?))
-        :ret (ss/async ss/deleted?))
+        :ret (ts/async ss/deleted?))
 
 
 (defn reject!
@@ -319,7 +319,7 @@
                      :reason ::reason
                      :params ::reject-params
                      :opts (s/? h/request-options?))
-        :ret (ss/async ::account))
+        :ret (ts/async ::account))
 
 
 (comment

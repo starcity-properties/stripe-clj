@@ -1,7 +1,8 @@
 (ns stripe.bank
   (:require [clojure.spec.alpha :as s]
             [stripe.http :as h]
-            [stripe.spec :as ss]))
+            [stripe.spec :as ss]
+            [toolbelt.spec :as ts]))
 
 
 ;; ==========================================================================
@@ -124,7 +125,7 @@
         :args (s/cat :customer-id ::customer
                      :source ::source
                      :opts (s/? h/request-options?))
-        :ret (ss/async ::bank-account))
+        :ret (ts/async ::bank-account))
 
 
 (defn fetch
@@ -138,7 +139,7 @@
         :args (s/cat :customer-id ::customer
                      :bank-account-id ::id
                      :opts (s/? h/request-options?))
-        :ret (ss/async ::bank-account))
+        :ret (ts/async ::bank-account))
 
 
 (defn fetch-all
@@ -158,7 +159,7 @@
                      :ternary (s/cat :customer-id ::customer
                                      :params ::fetch-all-params
                                      :opts h/request-options?))
-        :ret (ss/async ::bank-accounts))
+        :ret (ts/async ::bank-accounts))
 
 
 (defn update!
@@ -183,7 +184,7 @@
                                         :bank-account-id ::id
                                         :params ::update-params
                                         :opts h/request-options?))
-        :ret (ss/async ::bank-account))
+        :ret (ts/async ::bank-account))
 
 
 (defn verify!
@@ -208,7 +209,7 @@
                                         :bank-account-id ::id
                                         :params ::verify-params
                                         :opts h/request-options?))
-        :ret (ss/async ::bank-account))
+        :ret (ts/async ::bank-account))
 
 
 (defn delete!
@@ -222,7 +223,7 @@
         :args (s/cat :customer-id ::customer
                      :bank-account-id ::id
                      :opts (s/? h/request-options?))
-        :ret (ss/async ss/deleted?))
+        :ret (ts/async ss/deleted?))
 
 
 (comment
