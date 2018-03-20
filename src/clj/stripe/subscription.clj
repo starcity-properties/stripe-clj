@@ -74,12 +74,15 @@
 (s/def ::trial_start
   (s/nilable ss/unix-timestamp?))
 
+(s/def ::billing_cycle_anchor
+  (s/nilable ss/unix-timestamp?))
+
 (s/def ::subscription
   (-> (s/keys :req-un [::id ::application_fee_percent ::billing ::cancel_at_period_end
                        ::canceled_at ::created ::current_period_end ::current_period_start
                        ::customer ::days_until_due ::discount ::ended_at ::items ::livemode
                        ::plan ::quantity ::start ::status ::tax_percent ::trial_start
-                       ::trial_end])
+                       ::trial_end ::billing_cycle_anchor])
       (ss/metadata)
       (ss/stripe-object "subscription")))
 
@@ -107,7 +110,7 @@
 
 (s/def ::create-params
   (-> (s/keys :opt-un [::application_fee_percent ::billing ::coupon
-                       ::days_until_due ::items ::source])
+                       ::days_until_due ::items ::source ::billing_cycle_anchor])
       (ss/metadata)))
 
 
