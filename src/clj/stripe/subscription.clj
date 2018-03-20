@@ -5,7 +5,7 @@
             [stripe.plan :as plan]
             [stripe.subscription-item :as sub-item]
             [stripe.spec :as ss]
-            [stripe.util :as util]))
+            [toolbelt.spec :as ts]))
 
 ;; ==============================================================================
 ;; spec =========================================================================
@@ -15,7 +15,7 @@
   string?)
 
 (s/def ::application_fee_percent
-  (s/nilable (s/and pos? (util/between 0 101))))
+  (s/nilable (s/and pos? (ts/between 0 101))))
 
 (s/def ::billing
   #{"charge_automatically" "send_invoice"})
@@ -24,16 +24,16 @@
   boolean?)
 
 (s/def ::canceled_at
-  (s/nilable ss/unix-timestamp?))
+  (s/nilable ts/unix-timestamp?))
 
 (s/def ::created
-  ss/unix-timestamp?)
+  ts/unix-timestamp?)
 
 (s/def ::current_period_end
-  ss/unix-timestamp?)
+  ts/unix-timestamp?)
 
 (s/def ::current_period_start
-  ss/unix-timestamp?)
+  ts/unix-timestamp?)
 
 (s/def ::customer
   string?)
@@ -45,7 +45,7 @@
   (s/nilable map?))
 
 (s/def ::ended_at
-  (s/nilable ss/unix-timestamp?))
+  (s/nilable ts/unix-timestamp?))
 
 (s/def ::items
   (ss/sublist sub-item/subscription-item?))
@@ -60,7 +60,7 @@
   integer?)
 
 (s/def ::start
-  ss/unix-timestamp?)
+  ts/unix-timestamp?)
 
 (s/def ::status
   #{"trailing" "active" "past_due" "canceled" "unpaid"})
@@ -69,10 +69,10 @@
   (s/nilable (s/and number? pos?)))
 
 (s/def ::trial_end
-  (s/nilable ss/unix-timestamp?))
+  (s/nilable ts/unix-timestamp?))
 
 (s/def ::trial_start
-  (s/nilable ss/unix-timestamp?))
+  (s/nilable ts/unix-timestamp?))
 
 (s/def ::subscription
   (-> (s/keys :req-un [::id ::application_fee_percent ::billing ::cancel_at_period_end
@@ -118,7 +118,7 @@
   boolean?)
 
 (s/def ::proration_date
-  ss/unix-timestamp?)
+  ts/unix-timestamp?)
 
 (s/def ::update-params
   (-> (s/keys :opt-un [::application_fee_percent ::billing ::coupon ::days_until_due
@@ -127,6 +127,7 @@
 
 
 ;; cancel-params ========================
+
 
 (s/def ::at_period_end
   boolean?)
@@ -184,7 +185,7 @@
                                         :plan-ids ::plan-ids
                                         :params ::create-params
                                         :opts h/request-options?))
-        :ret (ss/async ::subscription))
+        :ret (ts/async ::subscription))
 
 
 (defn fetch
@@ -197,7 +198,7 @@
 (s/fdef fetch
         :args (s/cat :subscription-id ::id
                      :opts (s/? h/request-options?))
-        :ret (ss/async ::subscription))
+        :ret (ts/async ::subscription))
 
 
 (defn update!
@@ -217,7 +218,7 @@
                      :ternary (s/cat :subscription-id ::id
                                     :params ::update-params
                                     :opts h/request-options?))
-        :ret (ss/async ::subscription))
+        :ret (ts/async ::subscription))
 
 
 (defn cancel!
@@ -237,7 +238,7 @@
                      :ternary (s/cat :subscription-id ::id
                                      :params ::cancel-params
                                      :opts h/request-options?))
-        :ret (ss/async ::subscription))
+        :ret (ts/async ::subscription))
 
 (defn fetch-all
   "Fetches all customer subscriptions."
@@ -253,7 +254,7 @@
                      :unary (s/cat :params ::fetch-all-params)
                      :binary (s/cat :params ::fetch-all-params
                                     :opts h/request-options?))
-        :ret (ss/async ::subscriptions))
+        :ret (ts/async ::subscriptions))
 
 (comment
 

@@ -2,7 +2,8 @@
   (:require [clojure.spec.alpha :as s]
             [stripe.spec :as ss]
             [stripe.http :as h]
-            [clojure.core.async :as a]))
+            [clojure.core.async :as a]
+            [toolbelt.spec :as ts]))
 
 
 ;; ==============================================================================
@@ -17,7 +18,7 @@
   (s/or :positive pos-int? :zero zero?))
 
 (s/def ::created
-  ss/timestamp-query?)
+  ts/unix-timestamp?)
 
 (s/def ::currency
   ss/currency?)
@@ -112,7 +113,7 @@
                                      :amount ::amount
                                      :params ::create-params
                                      :opts h/request-options?))
-        :ret (ss/async ::plan))
+        :ret (ts/async ::plan))
 
 
 (defn fetch
@@ -125,7 +126,7 @@
 (s/fdef fetch
         :args (s/cat :plan-id ::id
                      :opts (s/? h/request-options?))
-        :ret (ss/async ::plan))
+        :ret (ts/async ::plan))
 
 
 (defn update!
@@ -140,7 +141,7 @@
         :args (s/cat :plan-id ::id
                      :params ::update-params
                      :opts (s/? h/request-options?))
-        :ret (ss/async ::plan))
+        :ret (ts/async ::plan))
 
 
 (defn delete!
@@ -153,7 +154,7 @@
 (s/fdef delete!
         :args (s/cat :plan-id ::id
                      :opts (s/? h/request-options?))
-        :ret (ss/async ss/deleted?))
+        :ret (ts/async ss/deleted?))
 
 
 (defn fetch-all
@@ -170,7 +171,7 @@
                      :unary (s/cat :params ::fetch-all-params)
                      :binary (s/cat :params ::fetch-all-params
                                      :opts h/request-options?))
-        :ret (ss/async ::plans))
+        :ret (ts/async ::plans))
 
 
 (comment

@@ -1,7 +1,8 @@
 (ns stripe.subscription-item
   (:require [clojure.spec.alpha :as s]
             [stripe.spec :as ss]
-            [stripe.plan :as plan]))
+            [stripe.plan :as plan]
+            [toolbelt.spec :as ts]))
 
 ;; ==============================================================================
 ;; spec =========================================================================
@@ -11,7 +12,7 @@
   string?)
 
 (s/def ::created
-  ss/unix-timestamp?)
+  ts/unix-timestamp?)
 
 (s/def ::metadata
   ss/metadata?)

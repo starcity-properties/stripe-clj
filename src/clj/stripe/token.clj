@@ -2,7 +2,8 @@
   (:require [clojure.spec.alpha :as s]
             [stripe.http :as h]
             [stripe.spec :as ss]
-            [stripe.util :as u]))
+            [toolbelt.spec :as ts]))
+
 
 ;; ==============================================================================
 ;; spec =========================================================================
@@ -19,7 +20,7 @@
 
 ;; two digit number representing the card's expiration month.
 (s/def ::exp_month
-  (s/and integer? (u/between 1 13)))
+  (s/and integer? (ts/between 1 13)))
 
 ;; two digit number representing the card's expiration year.
 (s/def ::exp_year
@@ -111,7 +112,7 @@
 (s/fdef create-card-token!
         :args (s/cat :card ::card
                      :opts (s/? h/request-options?))
-        :ret (ss/async))
+        :ret (ts/async))
 
 
 (defn create-bank-token!
@@ -128,7 +129,7 @@
 (s/fdef create-bank-token!
         :args (s/cat :bank ::bank-account
                      :opts (s/? h/request-options?))
-        :ret (ss/async))
+        :ret (ts/async))
 
 
 (defn get-token
@@ -142,4 +143,4 @@
         :args (s/cat ::token (s/or :card-token ::card-token
                                    :bank-token ::bank-token)
                      ::opts (s/? h/request-options?))
-        :ret (ss/async))
+        :ret (ts/async))
