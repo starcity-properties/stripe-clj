@@ -40,9 +40,14 @@
 (s/def ::trial_period_days
   (s/nilable (s/or :positive pos-int? :zero zero?)))
 
+(s/def ::product
+  (s/or :product-id string?
+        :product-map (s/keys :req-un [::name]
+                             :opt-un [::id :stripe.spec/metadata ::statement_descriptor])))
+
 (s/def ::plan
   (-> (s/keys :req-un [::currency ::interval ::name ::id ::amount
-                       ::created ::interval_count ::livemode]
+                       ::created ::interval_count ::livemode ::product]
               :opt-un [::statement_descriptor ::trial_period_days])
       (ss/metadata)
       (ss/stripe-object "plan")))
@@ -81,6 +86,7 @@
 (def plans?
   (partial s/valid? ::plans))
 
+
 ;; ==============================================================================
 ;; http api =====================================================================
 ;; ==============================================================================
@@ -88,26 +94,26 @@
 
 (defn create!
   "Create a plan."
-  ([name interval amount]
-   (create! name interval amount {} {}))
-  ([name interval amount params]
-   (create! name interval amount params {}))
-  ([name interval amount params opts]
-   (let [params' (merge params {:name     name
+  ([product interval amount]
+   (create! product interval amount {} {}))
+  ([product interval amount params]
+   (create! product interval amount params {}))
+  ([product interval amount params opts]
+   (let [params' (merge params {:product  product
                                 :interval interval
                                 :amount   amount
                                 :currency (or (:currency params) "usd")})]
      (h/post-req "plans" (assoc opts :params params')))))
 
 (s/fdef create!
-        :args (s/alt :ternary (s/cat :name ::name
+        :args (s/alt :ternary (s/cat :product ::product
                                      :interval ::interval
                                      :amount ::amount)
-                     :quaternary (s/cat :name ::name
+                     :quaternary (s/cat :product ::product
                                         :interval ::interval
                                         :amount ::amount
                                         :params ::create-params)
-                     :quinary (s/cat :name ::name
+                     :quinary (s/cat :product ::product
                                      :interval ::interval
                                      :amount ::amount
                                      :params ::create-params
