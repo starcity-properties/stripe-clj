@@ -4,7 +4,8 @@
             [stripe.http :as h]
             [stripe.spec :as ss]
             [stripe.token :as token]
-            [stripe.util :as u]))
+            [toolbelt.spec :as ts]))
+
 
 ;; ==============================================================================
 ;; spec =========================================================================
@@ -67,6 +68,7 @@
 
 (def create-customer-params?
   (partial s/valid? ::customer-req))
+
 
 ;; sources ======================================================================
 
@@ -172,7 +174,7 @@
 
 
 (s/def ::deposit-amount
-  (s/and integer? (u/between 1 100)))
+  (s/and integer? (ts/between 1 100)))
 
 (s/def ::amounts
   (s/cat :amount-1 ::deposit-amount :amount-2 ::deposit-amount))
@@ -191,7 +193,7 @@
 
 
 (s/def ::created
-  ss/timestamp-query?)
+  ts/unix-timestamp?)
 
 (s/def ::sources
   (ss/sublist (s/* ::source)))
@@ -223,7 +225,7 @@
 (s/fdef create!
         :args (s/cat :params ::customer-req
                      :opts (s/? h/request-options?))
-        :ret (ss/async ::customer))
+        :ret (ts/async ::customer))
 
 
 (defn add-source!
@@ -238,7 +240,7 @@
         :args (s/cat :customer-id ::customer-id
                      :source ::input-source
                      :opts (s/? h/request-options?))
-        :ret (ss/async ::source))
+        :ret (ts/async ::source))
 
 
 ;; fetch ========================================================================
@@ -256,7 +258,7 @@
 (s/fdef fetch
         :args (s/cat :id ::id
                      :opts (s/? h/request-options?))
-        :ret (ss/async ::customer))
+        :ret (ts/async ::customer))
 
 
 (defn fetch-source
@@ -270,7 +272,7 @@
         :args (s/cat :customer-id ::customer-id
                      :source-id ::source-id
                      :opts (s/? h/request-options?))
-        :ret (ss/async ::source))
+        :ret (ts/async ::source))
 
 
 ;; update! ======================================================================
@@ -288,7 +290,7 @@
         :args (s/cat :customer-id ::customer-id
                      :params ::customer-req
                      :opts (s/? h/request-options?))
-        :ret (ss/async ::customer))
+        :ret (ts/async ::customer))
 
 
 (defn- update-source!
@@ -309,7 +311,7 @@
                      :source-id ::source-id
                      :params ::update-bank-source-req
                      :opts (s/? h/request-options?))
-        :ret (ss/async ::source))
+        :ret (ts/async ::source))
 
 
 (defn verify-bank-source!
@@ -326,7 +328,7 @@
                      :source-id ::source-id
                      :amounts (s/spec ::amounts)
                      :opts (s/? h/request-options?))
-        :ret (ss/async ::source))
+        :ret (ts/async ::source))
 
 
 (defn update-card-source!
@@ -341,7 +343,7 @@
                      :source-id ::source-id
                      :params ::update-card-source-req
                      :opts (s/? h/request-options?))
-        :ret (ss/async ::source))
+        :ret (ts/async ::source))
 
 
 ;; delete! ======================================================================
@@ -357,7 +359,7 @@
 (s/fdef delete!
         :args (s/cat :customer-id ::customer-id
                      :opts (s/? h/request-options?))
-        :ret (ss/async ss/deleted?))
+        :ret (ts/async ss/deleted?))
 
 
 (defn delete-source!
@@ -371,7 +373,7 @@
         :args (s/cat :customer-id ::customer-id
                      :source-id ::source-id
                      :opts (s/? h/request-options?))
-        :ret (ss/async ss/deleted?))
+        :ret (ts/async ss/deleted?))
 
 
 ;; fetch-all ========================================================================
@@ -387,7 +389,7 @@
 (s/fdef fetch-all
         :args (s/cat :params ::all-customers-req
                      :opts (s/? h/request-options?))
-        :ret (ss/async ::customers))
+        :ret (ts/async ::customers))
 
 
 ;; TODO: make `search-by-email` function

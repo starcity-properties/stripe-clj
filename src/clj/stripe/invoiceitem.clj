@@ -1,9 +1,8 @@
 (ns stripe.invoiceitem
   (:require [clojure.spec.alpha :as s]
+            [stripe.customer :as customer]
             [stripe.http :as h]
-            [stripe.spec :as ss]
-            [datomic.api :as d]
-            [stripe.customer :as customer]))
+            [stripe.spec :as ss]))
 
 
 ;; ==========================================================================
@@ -32,7 +31,7 @@
   string?)
 
 (s/def ::date
-  ss/timestamp-query?)
+  ts/timestamp-query?)
 
 (s/def ::description
   string?)
@@ -47,10 +46,10 @@
   ss/livemode?)
 
 (s/def ::start
-  ss/timestamp-query?)
+  ts/timestamp-query?)
 
 (s/def ::end
-  ss/timestamp-query?)
+  ts/timestamp-query?)
 
 (s/def ::period
   (s/keys :req-un [::start ::end]))

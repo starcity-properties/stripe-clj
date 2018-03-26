@@ -1,8 +1,8 @@
 (ns stripe.card
   (:require [clojure.spec.alpha :as s]
             [stripe.spec :as ss]
-            [stripe.util :as u]
-            [stripe.http :as h]))
+            [stripe.http :as h]
+            [toolbelt.spec :as ts]))
 
 
 ;; ==============================================================================
@@ -76,7 +76,7 @@
   (s/nilable string?))
 
 (s/def ::exp_month
-  (s/and integer? (u/between 1 13)))
+  (s/and integer? (ts/between 1 13)))
 
 (s/def ::exp_year
   integer?)
@@ -166,7 +166,7 @@
         :args (s/cat :customer-id ::id
                      :source ::source
                      :opts (s/? h/request-options?))
-        :ret (ss/async ::card))
+        :ret (ts/async ::card))
 
 
 (defn fetch
@@ -180,7 +180,7 @@
         :args (s/cat :customer-id ::id
                      :source-id ::id
                      :opts (s/? h/request-options?))
-        :ret (ss/async ::card))
+        :ret (ts/async ::card))
 
 
 (defn update!
@@ -196,7 +196,7 @@
                      :card-id ::id
                      :params ::update-params
                      :opts (s/? h/request-options?))
-        :ret (ss/async ::card))
+        :ret (ts/async ::card))
 
 
 (defn delete!
@@ -210,7 +210,7 @@
         :args (s/cat :customer-id ::id
                      :card-id ::id
                      :opts (s/? h/request-options?))
-        :ret (ss/async ss/deleted?))
+        :ret (ts/async ss/deleted?))
 
 
 (defn fetch-all
@@ -230,7 +230,7 @@
                      :ternary (s/cat :customer-id ::id
                                      :params ::fetch-all-params
                                      :opts h/request-options?))
-        :ret (ss/async ::cards))
+        :ret (ts/async ::cards))
 
 (comment
 
