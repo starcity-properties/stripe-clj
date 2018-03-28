@@ -2,7 +2,6 @@
   (:require [clojure.spec.alpha :as s]
             [stripe.http :as h]
             [stripe.spec :as ss]
-            [datomic.api :as d]
             [stripe.customer :as customer]))
 
 
