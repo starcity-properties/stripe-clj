@@ -9,7 +9,7 @@
                  [http-kit "2.2.0"]
                  [cheshire "5.8.0"]
                  [ring/ring-codec "1.1.0"]
-                 [starcity/toolbelt-spec "0.1.0-SNAPSHOT"]
+                 [starcity/toolbelt-spec "0.1.5-SNAPSHOT"]
                  [starcity/toolbelt-async "0.4.0"]
                  [starcity/toolbelt-core "0.3.0"]]
 
