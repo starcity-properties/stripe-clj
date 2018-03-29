@@ -12,7 +12,7 @@
 
 (use-fixtures :once (api-token-fixture "test-token"))
 
-(deftest async-test
+#_(deftest async-test
   (is (= (a/<!! (b/get-balance {:out-ch (a/chan)}))
          (b/get-balance))
       "Supplying an output channel forces the client to stick the
