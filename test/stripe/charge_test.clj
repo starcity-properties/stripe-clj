@@ -66,7 +66,7 @@
 ;; (is (map? create! 100 {:customer "cus_BzZW6T3NzySJ5E"}))
 
 
-(deftest dummy-test
+#_(deftest dummy-test
   (testing "this test should always pass")
   (is (nil? nil) "succeeds silently")
   (is (nil? "charge") "OK >> designed to fail"))
