@@ -1,7 +1,8 @@
 (ns stripe.invoice
   (:require [clojure.spec.alpha :as s]
             [stripe.http :as h]
-            [stripe.spec :as ss]))
+            [stripe.spec :as ss]
+            [toolbelt.spec :as ts]))
 
 
 ;; ==========================================================================
@@ -272,7 +273,7 @@
                      :ternary (s/cat :customer-id ::customer
                                      :params ::create-params
                                      :opts (s/? h/request-options?)))
-        :ret (ss/async ::invoice))
+        :ret (ts/async ::invoice))
 
 
 (defn fetch
@@ -285,7 +286,7 @@
 (s/fdef fetch
         :args (s/cat :invoice-id ::id
                      :opts h/request-options?)
-        :ret (ss/async ::invoice))
+        :ret (ts/async ::invoice))
 
 
 (defn fetch-all
@@ -302,7 +303,7 @@
                      :unary (s/cat :params ::fetch-all-params)
                      :binary (s/cat :params ::fetch-all-params
                                     :opts h/request-options?))
-        :ret (ss/async ::invoices))
+        :ret (ts/async ::invoices))
 
 
 (defn fetch-line-items
@@ -322,7 +323,7 @@
                      :ternary (s/cat :invoice-id ::id
                                      :params ::fetch-line-item-params
                                      :opts h/request-options?))
-        :ret (ss/async ::invoices))
+        :ret (ts/async ::invoices))
 
 
 (defn fetch-upcoming
@@ -342,7 +343,7 @@
                      :ternary (s/cat :customer-id ::customer
                                      :params ::fetch-upcoming-params
                                      :opts h/request-options?))
-        :ret (ss/async ::invoice))
+        :ret (ts/async ::invoice))
 
 
 (defn update!
@@ -361,7 +362,7 @@
                      :ternary (s/cat :invoice-id ::id
                                      :params ::update-params
                                      :opts h/request-options?))
-        :ret (ss/async ::invoice))
+        :ret (ts/async ::invoice))
 
 
 (defn pay!
@@ -380,7 +381,7 @@
                      :ternary (s/cat :invoice-id ::id
                                      :params ::pay-params
                                      :opts h/request-options?))
-        :ret (ss/async ::invoice))
+        :ret (ts/async ::invoice))
 
 
 (comment

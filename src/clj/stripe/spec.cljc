@@ -1,29 +1,28 @@
 (ns stripe.spec
   (:require [clojure.spec.alpha :as s]
-            [toolbelt.spec]))
+            [toolbelt.spec :as ts]))
 
 
-;; ;; timestamp ============================
+;; timestamp ============================
+
+(s/def ::gt
+  ts/unix-timestamp?)
+
+(s/def ::gte
+  ts/unix-timestamp?)
+
+(s/def ::lt
+  ts/unix-timestamp?)
+
+(s/def ::lte
+  ts/unix-timestamp?)
+
+(s/def ::timestamp-query
+  (s/keys :opt-un [::gt ::gte ::lt ::lte]))
 
 
-;; (s/def ::gt
-;;   ts/unix-timestamp?)
-
-;; (s/def ::gte
-;;   ts/unix-timestamp?)
-
-;; (s/def ::lt
-;;   ts/unix-timestamp?)
-
-;; (s/def ::lte
-;;   ts/unix-timestamp?)
-
-;; (s/def ::timestamp-query
-;;   (s/keys :opt-un [::gt ::gte ::lt ::lte]))
-
-
-;; (defn timestamp-query? [x]
-;;   (s/valid? ::timestamp-query x))
+(defn timestamp-query? [x]
+  (s/valid? ::timestamp-query x))
 
 
 ;; statement-descriptor =================

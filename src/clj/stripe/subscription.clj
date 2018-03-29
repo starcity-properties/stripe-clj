@@ -75,7 +75,7 @@
   (s/nilable ts/unix-timestamp?))
 
 (s/def ::billing_cycle_anchor
-  (s/nilable ss/unix-timestamp?))
+  (s/nilable ts/unix-timestamp?))
 
 (s/def ::subscription
   (-> (s/keys :req-un [::id ::application_fee_percent ::billing ::cancel_at_period_end

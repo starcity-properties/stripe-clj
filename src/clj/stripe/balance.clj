@@ -2,7 +2,8 @@
   "Functions for Stripe's Balance API."
   (:require [clojure.spec.alpha :as s]
             [stripe.http :as h]
-            [stripe.spec :as ss]))
+            [stripe.spec :as ss]
+            [toolbelt.spec :as ts]))
 
 ;; =============================================================================
 ;; Spec
@@ -57,10 +58,10 @@
   ::balance-tx-id)
 
 (s/def ::available_on
-  ss/unix-timestamp?)
+  ts/unix-timestamp?)
 
 (s/def ::created
-  ss/unix-timestamp?)
+  ts/unix-timestamp?)
 
 (s/def ::fee
   integer?)
@@ -112,7 +113,7 @@
 
 (s/fdef get-balance
         :args (s/cat :opts (s/? h/request-options?))
-        :ret (ss/async ::balance))
+        :ret (ts/async ::balance))
 
 
 (defn get-history
@@ -127,7 +128,7 @@
 
 (s/fdef get-history
         :args (s/cat :opts (s/? ::history-options))
-        :ret (ss/async (ss/sublist (s/* ::balance-tx))))
+        :ret (ts/async (ss/sublist (s/* ::balance-tx))))
 
 
 (defn get-all-history
@@ -163,7 +164,7 @@
 (s/fdef get-balance-tx
         :args (s/cat :transaction-id ::balance-tx-id
                      :opts (s/? h/request-options?))
-        :ret (ss/async ::balance-tx))
+        :ret (ts/async ::balance-tx))
 
 
 ;; =============================================================================

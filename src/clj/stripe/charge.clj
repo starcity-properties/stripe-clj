@@ -3,7 +3,8 @@
             [stripe.customer :as customer]
             [stripe.http :as h]
             [stripe.spec :as ss]
-            [stripe.token :as token]))
+            [stripe.token :as token]
+            [toolbelt.spec :as ts]))
 
 ;; ==============================================================================
 ;; spec =========================================================================
@@ -50,7 +51,7 @@
   boolean?)
 
 (s/def ::created
-  ss/unix-timestamp?)
+  ts/unix-timestamp?)
 
 (s/def ::ending_before
   string?)
@@ -204,7 +205,7 @@
         :args (s/cat :amount ::amount
                      :params ::charge-params
                      :opts (s/? h/request-options?))
-        :ret (ss/async ::charge))
+        :ret (ts/async ::charge))
 
 
 (defn fetch
@@ -218,7 +219,7 @@
 (s/fdef fetch
         :args (s/cat :charge-id string?
                      :opts (s/? h/request-options?))
-        :ret (ss/async string?))
+        :ret (ts/async string?))
 
 
 (defn update!
@@ -232,7 +233,7 @@
         :args (s/cat :charge-id string?
                      :params ::update-params
                      :opts (s/? h/request-options?))
-        :ret (ss/async string?))
+        :ret (ts/async string?))
 
 
 (defn capture!
@@ -246,7 +247,7 @@
         :args (s/cat :charge-id string?
                      :params ::capture-params
                      :opts (s/? h/request-options?))
-        :ret (ss/async string?))
+        :ret (ts/async string?))
 
 
 (defn fetch-all
@@ -260,7 +261,7 @@
 (s/fdef fetch-all
         :args (s/cat :params ::fetch-all-params
                      :opts (s/? h/request-options?))
-        :ret (ss/async ::charges))
+        :ret (ts/async ::charges))
 
 
 ;; ==============================================================================

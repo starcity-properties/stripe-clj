@@ -1,7 +1,8 @@
 (ns stripe.transfer
   (:require [clojure.spec.alpha :as s]
             [stripe.http :as h]
-            [stripe.spec :as ss]))
+            [stripe.spec :as ss]
+            [toolbelt.spec :as ts]))
 
 
 ;; ==========================================================================
@@ -24,7 +25,7 @@
   string?)
 
 (s/def ::created
-  ss/unix-timestamp?)
+  ts/unix-timestamp?)
 
 (s/def ::currency
   ss/currency?)
@@ -119,7 +120,7 @@
                                         :destination ::destination
                                         :params ::create-params
                                         :opts h/request-options?))
-        :ret (ss/async ::transfer))
+        :ret (ts/async ::transfer))
 
 
 (defn fetch
@@ -132,7 +133,7 @@
 (s/fdef fetch
         :args (s/cat :transfer-id ::id
                      :opts h/request-options?)
-        :ret (ss/async ::transfer))
+        :ret (ts/async ::transfer))
 
 
 (defn fetch-all
@@ -149,7 +150,7 @@
                      :unary (s/cat :params ::fetch-all-params)
                      :binary (s/cat :params ::fetch-all-params
                                     :opts h/request-options?))
-        :ret (ss/async ::transfers))
+        :ret (ts/async ::transfers))
 
 
 (defn update!
@@ -164,7 +165,7 @@
         :args (s/cat :transfer-id ::id
                      :metadata ss/metadata?
                      :opts (s/? h/request-options?))
-        :ret (ss/async ::transfer))
+        :ret (ts/async ::transfer))
 
 
 (comment)
