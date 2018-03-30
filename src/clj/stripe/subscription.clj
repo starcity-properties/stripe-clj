@@ -195,7 +195,7 @@
   ([subscription-id]
    (fetch subscription-id {}))
   ([subscription-id opts]
-   (h/get-req (str "subscriptions/" subscription-id))))
+   (h/get-req (str "subscriptions/" subscription-id) opts)))
 
 (s/fdef fetch
         :args (s/cat :subscription-id ::id
