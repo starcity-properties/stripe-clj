@@ -326,7 +326,7 @@
 (s/fdef verify-bank-source!
         :args (s/cat :customer-id ::customer-id
                      :source-id ::source-id
-                     :amounts (s/spec ::amounts)
+                     :amounts ::amounts
                      :opts (s/? h/request-options?))
         :ret (ts/async ::source))
 
