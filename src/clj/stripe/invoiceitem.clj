@@ -2,7 +2,8 @@
   (:require [clojure.spec.alpha :as s]
             [stripe.customer :as customer]
             [stripe.http :as h]
-            [stripe.spec :as ss]))
+            [stripe.spec :as ss]
+            [toolbelt.spec :as ts]))
 
 
 ;; ==========================================================================
@@ -31,7 +32,7 @@
   string?)
 
 (s/def ::date
-  ts/timestamp-query?)
+  ss/timestamp-query?)
 
 (s/def ::description
   string?)
@@ -46,10 +47,10 @@
   ss/livemode?)
 
 (s/def ::start
-  ts/timestamp-query?)
+  ss/timestamp-query?)
 
 (s/def ::end
-  ts/timestamp-query?)
+  ss/timestamp-query?)
 
 (s/def ::period
   (s/keys :req-un [::start ::end]))
@@ -138,7 +139,7 @@
                      :ternary (s/cat :customer ::customer
                                      :params ::create-params
                                      :opts (s/? h/request-options?)))
-        :ret (ss/async ::invoiceitem))
+        :ret (ts/async ::invoiceitem))
 
 
 (defn fetch
@@ -151,7 +152,7 @@
 (s/fdef fetch
         :args (s/cat :invoiceitem-id ::id
                      :opts (s/? h/request-options?))
-        :ret (ss/async ::invoiceitem))
+        :ret (ts/async ::invoiceitem))
 
 
 (defn fetch-all
@@ -168,7 +169,7 @@
                      :unary (s/cat :params ::fetch-all-params)
                      :binary (s/cat :params ::fetch-all-params
                                     :opts h/request-options?))
-        :ret (ss/async ::invoiceitems))
+        :ret (ts/async ::invoiceitems))
 
 
 (defn update!
@@ -182,7 +183,7 @@
         :args (s/cat :invoiceitem-id ::id
                      :params ::update-params
                      :opts (s/? h/request-options?))
-        :ret (ss/async ::invoiceitem))
+        :ret (ts/async ::invoiceitem))
 
 
 (defn delete!
@@ -195,7 +196,7 @@
 (s/fdef delete!
         :args (s/cat :invoiceitem-id ::id
                      :opts (s/? h/request-options?))
-        :ret (ss/async ss/deleted?))
+        :ret (ts/async ss/deleted?))
 
 
 ;; ==================================================================================

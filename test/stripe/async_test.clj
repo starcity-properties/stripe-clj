@@ -2,9 +2,17 @@
   "Test of Stripe's async capabilities."
   (:use clojure.test)
   (:require [clojure.core.async :as a]
-            [stripe.balance :as b]))
+            [stripe.balance :as b]
+            [stripe.http :as h]))
 
-(deftest async-test
+(defn api-token-fixture [token]
+  (fn [f]
+    (h/with-token token
+      (f))))
+
+(use-fixtures :once (api-token-fixture "test-token"))
+
+#_(deftest async-test
   (is (= (a/<!! (b/get-balance {:out-ch (a/chan)}))
          (b/get-balance))
       "Supplying an output channel forces the client to stick the

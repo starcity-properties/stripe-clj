@@ -1,7 +1,8 @@
 (ns stripe.event
   (:require [clojure.spec.alpha :as s]
             [stripe.http :as h]
-            [stripe.spec :as ss]))
+            [stripe.spec :as ss]
+            [toolbelt.spec :as ts]))
 
 (s/def ::id
   string?)
@@ -10,7 +11,7 @@
   string?)
 
 (s/def ::created
-  ss/unix-timestamp?)
+  ts/unix-timestamp?)
 
 (s/def ::object
   map?)
@@ -77,7 +78,7 @@
 (s/fdef fetch
         :args (s/cat :event-id ::id
                      :opts (s/? h/request-options?))
-        :ret (ss/async ::event))
+        :ret (ts/async ::event))
 
 
 (defn fetch-all
@@ -93,7 +94,7 @@
                      :unary (s/cat :params ::fetch-all-params)
                      :binary (s/cat :params ::fetch-all-params
                                     :opts h/request-options?))
-        :ret (ss/async ::events))
+        :ret (ts/async ::events))
 
 
 (comment

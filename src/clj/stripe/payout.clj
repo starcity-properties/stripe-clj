@@ -1,7 +1,8 @@
 (ns stripe.payout
   (:require [clojure.spec.alpha :as s]
             [stripe.http :as h]
-            [stripe.spec :as ss]))
+            [stripe.spec :as ss]
+            [toolbelt.spec :as ts]))
 
 ;; ==========================================================================
 ;; spec =====================================================================
@@ -21,7 +22,7 @@
   integer?)
 
 (s/def ::arrival_date
-  ss/unix-timestamp?)
+  ts/unix-timestamp?)
 
 (s/def ::automatic
   boolean?)
@@ -30,7 +31,7 @@
   string?)
 
 (s/def ::created
-  ss/unix-timestamp?)
+  ts/unix-timestamp?)
 
 (s/def ::currency
   ss/currency?)
@@ -138,7 +139,7 @@
                      :ternary (s/cat :amount ::amount
                                      :params ::create-params
                                      :opts h/request-options?))
-        :ret (ss/async ::payout))
+        :ret (ts/async ::payout))
 
 
 (defn fetch
@@ -151,7 +152,7 @@
 (s/fdef fetch
         :args (s/cat :payout-id ::id
                      :opts (s/? h/request-options?))
-        :ret (ss/async ::payout))
+        :ret (ts/async ::payout))
 
 
 (defn fetch-all
@@ -168,7 +169,7 @@
                      :unary (s/cat :params ::fetch-all-params)
                      :binary (s/cat :params ::fetch-all-params
                                     :opts h/request-options?))
-        :ret (ss/async ::payouts))
+        :ret (ts/async ::payouts))
 
 
 (defn update!
@@ -183,7 +184,7 @@
         :args (s/cat :payout-id ::id
                      :metadata ss/metadata?
                      :opts (s/? h/request-options?))
-        :ret (ss/async ::payout))
+        :ret (ts/async ::payout))
 
 
 (defn cancel!
@@ -196,7 +197,7 @@
 (s/fdef cancel!
         :args (s/cat :payout-id ::id
                      :opts (s/? h/request-options?))
-        :ret (ss/async ::payout))
+        :ret (ts/async ::payout))
 
 
 (comment
