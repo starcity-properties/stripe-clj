@@ -44,7 +44,7 @@
   (s/and string? #(= 3 (count %))))
 
 (defn currency? [x]
-  (s/valid? ::currency-id x))
+  (s/valid? ::currency x))
 
 
 (s/def ::country
