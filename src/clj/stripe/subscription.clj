@@ -168,7 +168,7 @@
   "Create a subscription."
   ([customer-id plan-ids]
    (create! customer-id plan-ids {} {}))
-  ([customer-id params plan-ids]
+  ([customer-id plan-ids params]
    (create! customer-id plan-ids params {}))
   ([customer-id plan-ids params opts]
    (let [[k v]   (s/conform ::plan-ids plan-ids)
