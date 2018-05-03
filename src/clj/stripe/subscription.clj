@@ -109,8 +109,8 @@
   (s/or :plan string? :items (s/+ ::subscription-item)))
 
 (s/def ::create-params
-  (-> (s/keys :opt-un [::application_fee_percent ::billing ::coupon
-                       ::days_until_due ::items ::source ::billing_cycle_anchor])
+  (-> (s/keys :opt-un [::application_fee_percent ::coupon ::prorate ::proration_date
+                       ::days_until_due ::items ::source ::billing ::billing_cycle_anchor])
       (ss/metadata)))
 
 
