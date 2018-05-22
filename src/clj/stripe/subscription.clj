@@ -5,8 +5,7 @@
             [stripe.plan :as plan]
             [stripe.subscription-item :as sub-item]
             [stripe.spec :as ss]
-            [toolbelt.spec :as ts]
-            [taoensso.timbre :as timbre]))
+            [toolbelt.spec :as ts]))
 
 ;; ==============================================================================
 ;; spec =========================================================================
