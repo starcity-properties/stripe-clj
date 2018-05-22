@@ -80,9 +80,10 @@
 (s/def ::subscription
   (-> (s/keys :req-un [::id ::application_fee_percent ::billing ::cancel_at_period_end
                        ::canceled_at ::created ::current_period_end ::current_period_start
-                       ::customer ::days_until_due ::discount ::ended_at :subscription/items ::livemode
-                       ::plan ::quantity ::start ::status ::tax_percent ::trial_start
-                       ::trial_end ::billing_cycle_anchor])
+                       ::customer ::days_until_due ::discount ::ended_at
+                       :subscription.subscription/items ::livemode ::plan ::quantity
+                       ::start ::status ::tax_percent ::trial_start ::trial_end
+                       ::billing_cycle_anchor])
       (ss/metadata)
       (ss/stripe-object "subscription")))
 
