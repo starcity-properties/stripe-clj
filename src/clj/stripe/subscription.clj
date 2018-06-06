@@ -112,7 +112,7 @@
 (s/def ::prorate
   boolean?)
 
-(s/def trial_from_plan
+(s/def ::trial_from_plan
   boolean?)
 
 (s/def ::create-params
