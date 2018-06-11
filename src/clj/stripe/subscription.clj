@@ -47,7 +47,7 @@
 (s/def ::ended_at
   (s/nilable ts/unix-timestamp?))
 
-(s/def ::items
+(s/def :subscription.subscription/items
   (ss/sublist sub-item/subscription-item?))
 
 (s/def ::livemode
@@ -63,10 +63,10 @@
   ts/unix-timestamp?)
 
 (s/def ::status
-  #{"trailing" "active" "past_due" "canceled" "unpaid"})
+  #{"trialing" "active" "past_due" "canceled" "unpaid"})
 
 (s/def ::tax_percent
-  (s/nilable (s/and number? pos?)))
+  (s/nilable (s/and pos? (ts/between 0 101))))
 
 (s/def ::trial_end
   (s/nilable ts/unix-timestamp?))
@@ -116,23 +116,37 @@
   boolean?)
 
 (s/def ::create-params
-  (-> (s/keys :opt-un [::application_fee_percent ::coupon ::prorate ::proration_date
-                       ::days_until_due ::items ::source ::billing ::billing_cycle_anchor])
+  (-> (s/keys :opt-un [::application_fee_percent ::billing ::coupon ::prorate ::tax_percent
+                       ::days_until_due :subscription.subscription/items ::source ::billing_cycle_anchor
+                       ::trial_end ::trial_period_days ::trial_from_plan])
       (ss/metadata)))
 
 
 ;; update-params ========================
 
 
-(s/def ::prorate
-  boolean?)
-
 (s/def ::proration_date
   ts/unix-timestamp?)
 
+(s/def ::clear_usage
+  boolean?)
+
+(s/def ::deleted
+  boolean?)
+
+(s/def ::item
+  (-> (s/keys :opt-un [::id ::clear_usage ::deleted
+                       :subscription.subscription-item/plan ::quantity])
+      (ss/metadata)))
+
+(s/def ::items
+  (s/* ::item))
+
 (s/def ::update-params
-  (-> (s/keys :opt-un [::application_fee_percent ::billing ::coupon ::days_until_due
-                       ::items ::prorate ::proration_date ::source ::tax_percent ::trial_end])
+  (-> (s/keys :opt-un [::application_fee_percent ::billing ::billing_cycle_anchor
+                       ::cancel_at_period_end ::coupon ::days_until_due ::items
+                       ::prorate ::proration_date ::source ::tax_percent ::trial_end
+                       ::trial_from_plan])
       (ss/metadata)))
 
 
