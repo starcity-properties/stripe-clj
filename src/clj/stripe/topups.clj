@@ -81,29 +81,6 @@
 
 ;; fetch params =============================================================
 
-(s/def :stripe.topups.created/gt
-  ts/unix-timestamp?)
-
-(s/def :stripe.topups.created/gte
-  ts/unix-timestamp?)
-
-(s/def :stripe.topups.created/lt
-  ts/unix-timestamp?)
-
-(s/def :stripe.topups.created/lte
-  ts/unix-timestamp?)
-
-(s/def ::timestamp-query
-  (s/or :timestamp ts/unix-timestamp?
-        :query-map (s/keys :opt-un [:stripe.topups.created/gt
-                                    :stripe.topups.created/gte
-                                    :stripe.topups.created/lt
-                                    :stripe.topups.created/lte])))
-
-(defn timestamp-query? [x]
-  (s/valid? ::timestamp-query x))
-
-
 (s/def :stripe.topups.amount/gt
   integer?)
 
@@ -131,7 +108,7 @@
   amount-query?)
 
 (s/def :stripe.topups.fetch-all/created
-  timestamp-query?)
+  ss/timestamp-query?)
 
 (s/def ::ending_before
   string?)
