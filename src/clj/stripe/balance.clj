@@ -10,7 +10,8 @@
 ;; =============================================================================
 
 (s/def ::amount
-  pos-int?)
+  (s/or :zero zero?
+        :int pos-int?))
 
 (s/def ::currency
   ss/currency?)
@@ -121,9 +122,10 @@
    (get-history {}))
   ([opts]
    (h/get-req "balance/history"
-              (-> {:stripe-params (merge {:limit (:limit opts 100)}
-                                         (when-let [sa (:starting-after opts)]
-                                           {:starting_after sa}))}
+              (-> (:params opts)
+                  {:params (merge {:limit (:limit opts 100)}
+                                  (when-let [sa (:starting-after opts)]
+                                    {:starting_after sa}))}
                   (merge opts)))))
 
 (s/fdef get-history
