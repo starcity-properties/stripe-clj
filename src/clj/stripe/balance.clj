@@ -122,8 +122,8 @@
    (get-history {}))
   ([opts]
    (h/get-req "balance/history"
-              (-> (:params opts)
-                  {:params (merge {:limit (:limit opts 100)}
+              (-> {:params (merge (:params opts)
+                                  {:limit (:limit opts 100)}
                                   (when-let [sa (:starting-after opts)]
                                     {:starting_after sa}))}
                   (merge opts)))))
