@@ -69,8 +69,7 @@
 
 
 (s/def ::create-params
-  (-> (s/keys :opt-un [::amount ::currency ::destination
-                       ::source_transaction ::transfer_group])
+  (-> (s/keys :opt-un [::currency ::source_transaction ::transfer_group])
       (ss/metadata)))
 
 
