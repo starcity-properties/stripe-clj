@@ -9,9 +9,9 @@
 ;; Spec
 ;; =============================================================================
 
+;; balance-transaction amount could be negative as well in cases of payouts or refunds
 (s/def ::amount
-  (s/or :zero zero?
-        :int pos-int?))
+  integer?)
 
 (s/def ::currency
   ss/currency?)
@@ -51,9 +51,12 @@
   (s/keys :req-un [::amount ::currency :fee-details/type ::description ::application]))
 
 (s/def ::transaction-type
-  #{"charge" "refund" "adjustment" "application_fee"
-    "application_fee_refund" "transfer" "transfer_cancel"
-    "transfer_failure" "payment" "payment_refund"})
+  #{"adjustment" "advance" "advance_funding" "application_fee" "application_fee_refund" "charge"
+    "connect_collection_transfer" "issuing_authorization_hold" "issuing_authorization_release"
+    "issuing_transaction" "payment" "payment_failure_refund" "payment_refund" "payout" "payout_cancel"
+    "payout_failure" "refund" "refund_failure" "reserve_transaction" "reserved_funds" "stripe_fee"
+    "stripe_fx_fee" "tax_fee" "topup" "topup_reversal" "transfer"
+    "transfer_cancel" "transfer_failure" "transfer_refund"})
 
 (s/def ::id
   ::balance-tx-id)
@@ -68,7 +71,7 @@
   integer?)
 
 (s/def ::fee_details
-  (s/+ ::fee-details))
+  (s/* ::fee-details))
 
 (s/def ::net
   integer?)
@@ -130,7 +133,7 @@
 
 (s/fdef get-history
         :args (s/cat :opts (s/? ::history-options))
-        :ret (ts/async (ss/sublist (s/* ::balance-tx))))
+        :ret (ts/async (ss/sublist ::balance-tx)))
 
 
 (defn get-all-history
