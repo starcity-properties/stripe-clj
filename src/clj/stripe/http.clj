@@ -182,13 +182,13 @@
   defaults.
 
   `params` is the parameters for the stripe API calls."
-  [token method params opts]
+  [token method params {:keys [headers] :as opts :or {headers {}}}]
   (let [[k params'] (encode-params method params)
         base-params {:basic-auth token
                      k           params'}
         version     (or (:api-version opts) (api-version))
         connect     (or (:account opts) (connect-account))
-        headers     (tb/assoc-when {} "Stripe-Version" version "Stripe-Account" connect)]
+        headers     (tb/assoc-when headers "Stripe-Version" version "Stripe-Account" connect)]
     (merge base-params {:headers headers} (dissoc opts :api-version :account))))
 
 (s/fdef prepare-params
