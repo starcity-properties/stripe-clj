@@ -189,7 +189,7 @@
         version     (or (:api-version opts) (api-version))
         connect     (or (:account opts) (connect-account))
         headers     (tb/assoc-when headers "Stripe-Version" version "Stripe-Account" connect)]
-    (merge base-params {:headers headers} (dissoc opts :api-version :account))))
+    (merge base-params {:headers headers} (dissoc opts :api-version :account :headers))))
 
 (s/fdef prepare-params
         :args (s/cat :token  ::api-token
