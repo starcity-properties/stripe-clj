@@ -17,6 +17,9 @@
 (s/def ::statement_descriptor
   ss/statement-descriptor?)
 
+(s/def ::statement_descriptor_suffix
+  ss/statement-descriptor?)
+
 (s/def ::charge-amount
   (s/and integer? #(>= % 50)))          ; minimum is 50 cents
 
@@ -132,9 +135,6 @@
 (s/def ::on_behalf_of
   string?)
 
-(s/def ::statement_descriptor
-  ss/statement-descriptor?)
-
 (s/def ::fraud_details
   map?)
 
@@ -146,7 +146,8 @@
             (or (contains? x :source) (contains? x :customer)))]
     (-> (s/keys :opt-un [::currency ::source ::customer ::description ::capture
                          ::application_fee ::receipt_email ::destination
-                         ::transfer_group ::on_behalf_of ::statement_descriptor])
+                         ::transfer_group ::on_behalf_of ::statement_descriptor
+                         ::statement_descriptor_suffix])
         (s/and has-source-or-customer?)
         (ss/metadata))))
 
