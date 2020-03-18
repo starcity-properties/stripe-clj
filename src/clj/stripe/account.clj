@@ -197,7 +197,7 @@
    (let [params (assoc params :country country :type type :email email)]
      (h/post-req "accounts" (assoc opts :params params)))))
 
-(s/fdef create!
+#_(s/fdef create!
         :args (s/alt :binary (s/cat :type ::type
                                     :email ::email)
                      :ternary (s/cat :type ::type
@@ -282,7 +282,7 @@
   ([account-id params opts]
    (h/post-req (str "accounts/" account-id) (assoc opts :params params))))
 
-(s/fdef update!
+#_(s/fdef update!
         :args (s/alt :unary (s/cat :account-id ::id)
                      :binary (s/cat :account-id ::id
                                     :params ::update-params)
